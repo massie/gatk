@@ -671,6 +671,33 @@ public final class CommandLineParserTest {
         Assert.assertFalse(clp.parseArguments(System.err, new String[]{"--version", "true"}));
     }
 
+    private static class MutexCollections{
+        @Argument(optional = false, mutex={"alternateValues"})
+        List<Integer> values;
+
+        @Argument(optional = false, mutex={"values"})
+        List<Integer> alternateValues;
+    }
+
+    @DataProvider(name="validMutexCollections")
+    public Object[][] makeValidMutexCollections(){
+        return new Object[][]{
+                {new String[]{"--values", "1", "--values","2"}, Arrays.asList(1,2), Collections.emptyList()},
+                {new String[]{"--values", "1"}, Arrays.asList(1), Collections.emptyList()},
+                {new String[]{"--alternateValues", "3"}, Collections.emptyList(), Arrays.asList(3)},
+                {new String[]{"--alternateValues", "3", "--alternateValues", "4"}, Collections.emptyList(), Arrays.asList(3,4)},
+        };
+    }
+
+    @Test(dataProvider = "validMutexCollections")
+    public void testMutexCollections(String[] args, List<Integer> values, List<Integer> alternateValues){
+        final MutexCollections o = new MutexCollections();
+        final CommandLineParser clp = new CommandLineParser(o);
+        clp.parseArguments(System.err, args);
+        Assert.assertEquals(o.values, values);
+        Assert.assertEquals(o.alternateValues, alternateValues);
+    }
+
     /***************************************************************************************
      * Start of tests and helper classes for CommandLineParser.gatherArgumentValuesOfType()
      ***************************************************************************************/

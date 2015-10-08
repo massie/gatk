@@ -300,29 +300,17 @@ public final class CommandLineParser {
     private void assertArgumentsAreValid() {
         try {
             for (final ArgumentDefinition argumentDefinition : argumentDefinitions) {
-                final String fullName = argumentDefinition.getLongName();
-                final StringBuilder mutextArgumentNames = new StringBuilder();
-                for (final String mutexArgument : argumentDefinition.mutuallyExclusive) {
-                    final ArgumentDefinition mutextArgumentDef = argumentMap.get(mutexArgument);
-                    if (mutextArgumentDef != null && mutextArgumentDef.hasBeenSet) {
-                        mutextArgumentNames.append(" ").append(mutextArgumentDef.getLongName());
-                    }
-                }
-                if (argumentDefinition.hasBeenSet && mutextArgumentNames.length() > 0) {
-                    throw new UserException.CommandLineException("Argument '" + fullName +
+                final String name = argumentDefinition.getLongName();
+                final Set<ArgumentDefinition> mutextArguments = getConflictingMutallyExclusiveArguments(argumentDefinition, argumentMap);
+                if (argumentDefinition.hasBeenSet && !mutextArguments.isEmpty()) {
+                    throw new UserException.CommandLineException("Argument '" + name +
                             "' cannot be used in conjunction with argument(s)" +
-                            mutextArgumentNames.toString());
+                            mutextArguments.stream().map(ArgumentDefinition::getLongName).collect(Collectors.joining(" ")));
                 }
-                if (argumentDefinition.isCollection && !argumentDefinition.optional) {
-                    @SuppressWarnings("rawtypes")
-                    final Collection c = (Collection) argumentDefinition.getFieldValue();
-                    if (c.isEmpty()) {
-                        throw new UserException.MissingArgument(fullName, "Argument '" + fullName + "' must be specified at least once.");
-                    }
-                } else if (!argumentDefinition.optional && !argumentDefinition.hasBeenSet && mutextArgumentNames.length() == 0) {
-                    throw new UserException.MissingArgument(fullName, "Argument '" + fullName + "' is required" +
-                            (argumentDefinition.mutuallyExclusive.isEmpty() ? "." : " unless any of " + argumentDefinition.mutuallyExclusive +
-                                    " are specified."));
+                if (!argumentDefinition.optional && !argumentDefinition.hasBeenSet && mutextArguments.isEmpty()) {
+                    final String requirementString = argumentDefinition.isCollection ? "' must be specified at least once." : "' is required";
+                    final String mutexString = argumentDefinition.mutuallyExclusive.isEmpty() ? "." : " unless any of " + argumentDefinition.mutuallyExclusive + " are specified.";
+                    throw new UserException.MissingArgument(name, String.format("Argument '%s' %s%s.", name, requirementString, mutexString));
                 }
 
             }
@@ -339,6 +327,20 @@ public final class CommandLineParser {
         }
 
 
+    }
+
+    /**
+     * Get a Set of other {@link ArgumentDefinition}s that have been set that are mutually exclusive to arg
+     * @param arg any argument, set or unset
+     * @param argumentMap a mapping from argument name to argument
+     * @return a Set of other argument definitions that have been set, that are mutually exclusive with arg
+     */
+    private static Set<ArgumentDefinition> getConflictingMutallyExclusiveArguments(ArgumentDefinition arg, Map<String, ArgumentDefinition> argumentMap) {
+        return arg.mutuallyExclusive.stream()
+                .sorted()
+                .map(argumentMap::get)
+                .filter(mutexArg -> mutexArg !=null && mutexArg.hasBeenSet )
+                .collect(Collectors.toSet());
     }
 
     @SuppressWarnings("unchecked")
