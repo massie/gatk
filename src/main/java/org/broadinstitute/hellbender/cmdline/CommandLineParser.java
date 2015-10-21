@@ -15,8 +15,20 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -299,6 +311,10 @@ public final class CommandLineParser {
      */
     private void assertArgumentsAreValid() {
         try {
+            Set<ArgumentDefinition> missingRequiredArguments = new HashSet<>();
+            Set<ArgumentDefinition> mutuallyExclusiveArgumentsThatWereSpecifiedTogether = new HashSet<>();
+
+
             for (final ArgumentDefinition argumentDefinition : argumentDefinitions) {
                 final String name = argumentDefinition.getLongName();
                 final Set<ArgumentDefinition> mutextArguments = getConflictingMutallyExclusiveArguments(argumentDefinition, argumentMap);
@@ -308,25 +324,46 @@ public final class CommandLineParser {
                             mutextArguments.stream().map(ArgumentDefinition::getLongName).collect(Collectors.joining(" ")));
                 }
                 if (!argumentDefinition.optional && !argumentDefinition.hasBeenSet && mutextArguments.isEmpty()) {
-                    final String requirementString = argumentDefinition.isCollection ? "' must be specified at least once." : "' is required";
-                    final String mutexString = argumentDefinition.mutuallyExclusive.isEmpty() ? "." : " unless any of " + argumentDefinition.mutuallyExclusive + " are specified.";
-                    throw new UserException.MissingArgument(name, String.format("Argument '%s' %s%s.", name, requirementString, mutexString));
+                    missingRequiredArguments.add(argumentDefinition);
                 }
-
             }
+
             if (positionalArguments != null) {
                 @SuppressWarnings("rawtypes")
                 final Collection c = (Collection) positionalArguments.get(positionalArgumentsParent);
                 if (c.size() < minPositionalArguments) {
-                    throw new UserException.MissingArgument(POSITIONAL_ARGUMENTS_NAME,"At least " + minPositionalArguments +
-                            " positional arguments must be specified.");
+                    throw new UserException.MissingArgument(POSITIONAL_ARGUMENTS_NAME + " was missing. At least " + minPositionalArguments +
+                            " positional arguments must be specified.", getCommandLineAsInput());
                 }
+            }
+            if(!missingRequiredArguments.isEmpty()){
+                throw new UserException.MissingArgument(composeMissingArgumentsMessage(missingRequiredArguments), getCommandLineAsInput());
             }
         } catch (final IllegalAccessException e) {
             throw new GATKException.ShouldNeverReachHereException("Should never happen",e);
         }
 
 
+    }
+
+    private String composeMissingArgumentsMessage(Set<ArgumentDefinition> missingRequiredArguments) {
+        final Set<ArgumentDefinition> alreadyOutput = new HashSet<>();
+
+        //Sort the missing arguments so that single arguments are sorted before mutually exclusive groups, and then alphabetically within group
+        final List<ArgumentDefinition> sortedArgs = missingRequiredArguments.stream()
+                .sorted(Comparator.comparing((ArgumentDefinition arg) -> !arg.mutuallyExclusive.isEmpty())
+                        .thenComparing(ArgumentDefinition::getLongName))
+                .collect(Collectors.toList());
+
+        List<String> messages = new ArrayList<>();
+        for( ArgumentDefinition arg: sortedArgs) {
+            if(!alreadyOutput.contains(arg)) {
+                messages.add(arg.composeMissingArgumentMessage(argumentMap));
+                alreadyOutput.addAll(arg.getMutuallyExclusiveArguments(argumentMap));
+            }
+        }
+
+        return String.join("\n", messages);
     }
 
     /**
@@ -339,7 +376,7 @@ public final class CommandLineParser {
         return arg.mutuallyExclusive.stream()
                 .sorted()
                 .map(argumentMap::get)
-                .filter(mutexArg -> mutexArg !=null && mutexArg.hasBeenSet )
+                .filter(mutexArg -> mutexArg != null && mutexArg.hasBeenSet)
                 .collect(Collectors.toSet());
     }
 
@@ -775,7 +812,7 @@ public final class CommandLineParser {
         String getHelpDoc();
     }
 
-    protected static class ArgumentDefinition {
+    private static class ArgumentDefinition {
         final Field field;
         final String fieldName;
         final String fullName;
@@ -900,6 +937,30 @@ public final class CommandLineParser {
             }
         }
 
+        /**
+         * @param argumentDefinitionMap a map from argument names to {@link ArgumentDefinition}
+         * @return the set of arguments that this argument is mutually exclusive with (including itself in the set)
+         */
+        public Set<ArgumentDefinition> getMutuallyExclusiveArguments(Map<String,ArgumentDefinition> argumentDefinitionMap){
+            final Set<ArgumentDefinition> mutexArguments = mutuallyExclusive.stream().map(argumentDefinitionMap::get).collect(Collectors.toSet());
+            mutexArguments.add(this);
+            return mutexArguments;
+        }
+
+        public String composeMissingArgumentMessage(Map<String,ArgumentDefinition> argumentDefinitionMap){
+            if(mutuallyExclusive.isEmpty()){
+                return String.format("required argument --%s was not specified", getLongName());
+            } else {
+                final Set<ArgumentDefinition> mutuallyExclusiveArguments = getMutuallyExclusiveArguments(argumentDefinitionMap);
+                return mutuallyExclusiveArguments.stream()
+                        .map(ArgumentDefinition::getLongName)
+                        .sorted()
+                        .map(name -> "--" + name)
+                        .collect(Collectors.joining(", ", "one of the following required arguments must be specified:", " must be specified"));
+
+            }
+        }
+
     }
 
     /**
@@ -913,7 +974,7 @@ public final class CommandLineParser {
      * hasn't yet been called, or didn't complete successfully.
      */
     @SuppressWarnings("unchecked")
-    public String getCommandLine() {
+    public String getFullySpecifiedCommandLine() {
         final String toolName = callerArguments.getClass().getName();
         final StringBuilder commandLineString = new StringBuilder();
 
@@ -945,6 +1006,18 @@ public final class CommandLineParser {
         return toolName + " " + commandLineString.toString();
     }
 
+    /**
+     *
+     * This must be called after {@link CommandLineParser#argv} is intialized by {@link CommandLineParser#parseArguments(PrintStream, String[])} or it throw {@link GATKException}
+     * @return what was actually entered as the command line joined into a String
+     */
+    private String getCommandLineAsInput(){
+        if( argv == null){
+            throw new GATKException("No commandline was specified for parsing yet");
+        } else{
+            return String.join(" ", argv);
+        }
+    }
 
     /**
      * Locates and returns the VALUES of all Argument-annotated fields of a specified type in a given object,

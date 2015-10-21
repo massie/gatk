@@ -195,7 +195,7 @@ public final class CommandLineParserTest {
         final FrobnicateArguments fo = new FrobnicateArguments();
         final CommandLineParser clp = new CommandLineParser(fo);
         Assert.assertTrue(clp.parseArguments(System.err, args));
-        Assert.assertEquals(clp.getCommandLine(),
+        Assert.assertEquals(clp.getFullySpecifiedCommandLine(),
                 "org.broadinstitute.hellbender.cmdline.CommandLineParserTest$FrobnicateArguments  " +
                         "positional1 positional2 --FROBNICATION_THRESHOLD 17 --FROBNICATION_FLAVOR BAR " +
                         "--SHMIGGLE_TYPE shmiggle1 --SHMIGGLE_TYPE shmiggle2 --TRUTHINESS true  --help false " +
@@ -223,7 +223,7 @@ public final class CommandLineParserTest {
         final CommandLineParser clp = new CommandLineParser(sv);
         Assert.assertTrue(clp.parseArguments(System.err, args));
 
-        final String commandLine = clp.getCommandLine();
+        final String commandLine = clp.getFullySpecifiedCommandLine();
 
         Assert.assertTrue(commandLine.contains(unclassified));
         Assert.assertFalse(commandLine.contains(supersecret));
