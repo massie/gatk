@@ -36,7 +36,7 @@ public final class GenotypingLikelihoods<A extends Allele> implements SampleList
      *  does not correspond with the number of likelihoods arrays in {@code likelihoods}
      */
     GenotypingLikelihoods(final AlleleList<A> alleles, final PloidyModel ploidyModel,
-                          final List<GenotypeLikelihoods> likelihoods) {
+                          final List<GenotypeLikelihoodsWrapper> likelihoods) {
         if (alleles == null) {
             throw new IllegalArgumentException("allele list cannot be null");
         }
