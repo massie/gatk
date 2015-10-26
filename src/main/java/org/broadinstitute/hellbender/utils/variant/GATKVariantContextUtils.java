@@ -8,6 +8,7 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeBuilderNaturalLog;
 import org.broadinstitute.hellbender.utils.GenomeLoc;
 import org.broadinstitute.hellbender.utils.MathUtils;
 import org.broadinstitute.hellbender.utils.Utils;
@@ -90,7 +91,7 @@ public final class GATKVariantContextUtils {
         // create the new genotypes
         for ( int k = 0; k < originalGs.size(); k++ ) {
             final Genotype g = originalGs.get(sampleIndices.get(k));
-            final GenotypeBuilder gb = new GenotypeBuilder(g);
+            final GenotypeBuilderNaturalLog gb = new GenotypeBuilderNaturalLog(g);
 
             // create the new likelihoods array from the alleles we are allowed to use
             double[] newLikelihoods;
@@ -170,7 +171,7 @@ public final class GATKVariantContextUtils {
         if ( !genotype.hasAD() )
             return genotype;
 
-        final GenotypeBuilder builder = new GenotypeBuilder(genotype);
+        final GenotypeBuilderNaturalLog builder = new GenotypeBuilderNaturalLog(genotype);
 
         final int[] oldAD = genotype.getAD();
         if ( oldAD.length != alleleIndexesToUse.length ) {
@@ -211,15 +212,14 @@ public final class GATKVariantContextUtils {
 
     /**
      * Add the genotype call (GT) field to GenotypeBuilder using the requested algorithm assignmentMethod
-     *
-     * @param originalGT the original genotype calls, cannot be null
+     *  @param originalGT the original genotype calls, cannot be null
      * @param gb the builder where we should put our newly called alleles, cannot be null
      * @param assignmentMethod the method to use to do the assignment, cannot be null
      * @param newLikelihoods a vector of likelihoods to use if the method requires PLs, should be log10 likelihoods, cannot be null
      * @param allelesToUse the alleles we are using for our subsetting
      */
     public static void updateGenotypeAfterSubsetting(final List<Allele> originalGT,
-                                                     final GenotypeBuilder gb,
+                                                     final GenotypeBuilderNaturalLog gb,
                                                      final GenotypeAssignmentMethod assignmentMethod,
                                                      final double[] newLikelihoods,
                                                      final List<Allele> allelesToUse) {
@@ -241,8 +241,7 @@ public final class GATKVariantContextUtils {
                     GenotypeLikelihoods.GenotypeLikelihoodsAllelePair alleles = GenotypeLikelihoods.getAllelePair(PLindex);
                     gb.alleles(Arrays.asList(allelesToUse.get(alleles.alleleIndex1), allelesToUse.get(alleles.alleleIndex2)));
 
-                    //TODO: I don't see how this code has any effect!
-                    gb.log10PError(GenotypeLikelihoods.getGQLog10FromLikelihoods(PLindex, newLikelihoods));
+                    gb.logPError(GenotypeLikelihoods.getGQLog10FromLikelihoods(PLindex, newLikelihoods));
                 }
                 break;
             case BEST_MATCH_TO_ORIGINAL:
@@ -704,7 +703,7 @@ public final class GATKVariantContextUtils {
         for ( final Genotype g : vc.getGenotypes() ) {
             final int gPloidy = g.getPloidy() == 0 ? ploidy : g.getPloidy();
             final List<Allele> refAlleles = gPloidy == 2 ? diploidRefAlleles : Collections.nCopies(gPloidy, ref);
-            final GenotypeBuilder gb = new GenotypeBuilder(g.getSampleName(), refAlleles);
+            final GenotypeBuilderNaturalLog gb = new GenotypeBuilderNaturalLog(g.getSampleName(), refAlleles);
             if ( g.hasDP() ) gb.DP(g.getDP());
             if ( g.hasGQ() ) gb.GQ(g.getGQ());
             newGTs.add(gb.make());
@@ -714,7 +713,7 @@ public final class GATKVariantContextUtils {
     }
 
     public static Genotype removePLsAndAD(final Genotype g) {
-        return ( g.hasLikelihoods() || g.hasAD() ) ? new GenotypeBuilder(g).noPL().noAD().make() : g;
+        return ( g.hasLikelihoods() || g.hasAD() ) ? new GenotypeBuilderNaturalLog(g).noPL().noAD().make() : g;
     }
 
     //TODO consider refactor variant-context merging code so that we share as much as possible between
@@ -1067,7 +1066,7 @@ public final class GATKVariantContextUtils {
 
                 if ( uniquifySamples || alleleMapping.needsRemapping() ) {
                     final List<Allele> alleles = alleleMapping.needsRemapping() ? alleleMapping.remap(g.getAlleles()) : g.getAlleles();
-                    newG = new GenotypeBuilder(g).name(name).alleles(alleles).make();
+                    newG = new GenotypeBuilderNaturalLog(g).name(name).alleles(alleles).make();
                 }
 
                 mergedGenotypes.add(newG);
@@ -1187,7 +1186,7 @@ public final class GATKVariantContextUtils {
 
         for ( final Genotype genotype : originalGenotypes ) {
             final List<Allele> updatedAlleles = alleleMapper.remap(genotype.getAlleles());
-            updatedGenotypes.add(new GenotypeBuilder(genotype).alleles(updatedAlleles).make());
+            updatedGenotypes.add(new GenotypeBuilderNaturalLog(genotype).alleles(updatedAlleles).make());
         }
 
         return updatedGenotypes;

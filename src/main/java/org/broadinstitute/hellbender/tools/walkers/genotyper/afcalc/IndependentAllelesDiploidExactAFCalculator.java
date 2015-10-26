@@ -2,6 +2,7 @@ package org.broadinstitute.hellbender.tools.walkers.genotyper.afcalc;
 
 import com.google.common.annotations.VisibleForTesting;
 import htsjdk.variant.variantcontext.*;
+import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeBuilderNaturalLog;
 import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeLikelihoodCalculators;
 import org.broadinstitute.hellbender.utils.MathUtils;
 import org.broadinstitute.hellbender.utils.QualityUtils;
@@ -129,7 +130,7 @@ import java.util.*;
         final double[] newLikelihoods = new double[3];
         final List<Genotype> newGenotypes = new ArrayList<>(vc.getNSamples());
         for (final Genotype oldGenotype : vc.getGenotypes()) {
-            final GenotypeBuilder gb = new GenotypeBuilder(oldGenotype);
+            final GenotypeBuilderNaturalLog gb = new GenotypeBuilderNaturalLog(oldGenotype);
             final List<Allele> oldAlleles = oldGenotype.getAlleles();
             if (oldAlleles != null) {
                 final List<Allele> newAlleles = new ArrayList<>(oldAlleles.size());
@@ -251,7 +252,7 @@ import java.util.*;
     static Genotype combineGLsPrecise(final Genotype original, final int altIndex, final int nAlts) {
 
         if ( original.isNonInformative() ) {
-            return new GenotypeBuilder(original).PL(BIALLELIC_NON_INFORMATIVE_PLS).alleles(BIALLELIC_NOCALL).make();
+            return new GenotypeBuilderNaturalLog(original).PL(BIALLELIC_NON_INFORMATIVE_PLS).alleles(BIALLELIC_NOCALL).make();
         }
 
         if ( altIndex < 1 || altIndex > nAlts ) {
@@ -291,7 +292,7 @@ import java.util.*;
         final double XX = MathUtils.logSumLog(XXvalues);
 
         final double[] GLs = { XX, XB, BB};
-        return new GenotypeBuilder(original).PL(GLs).alleles(BIALLELIC_NOCALL).make();
+        return new GenotypeBuilderNaturalLog(original).PL(GLs).alleles(BIALLELIC_NOCALL).make();
     }
 
     @VisibleForTesting
@@ -357,9 +358,9 @@ import java.util.*;
 
         return new AFCalculationResult(alleleCountsOfMLE, vc.getAlleles(),
                 // necessary to ensure all values < 0
-                MathUtils.normalizeFromLog(new double[] { combinedAltAllelesResult.getLogLikelihoodOfAFEq0(), combinedAltAllelesResult.getLogLikelihoodOfAFGT0() }, true),
+                MathUtils.normalizeFromLog(new double[]{combinedAltAllelesResult.getLogLikelihoodOfAFEq0(), combinedAltAllelesResult.getLogLikelihoodOfAFGT0() }, true),
                 // priors incorporate multiple alt alleles, must be normalized
-                MathUtils.normalizeFromLog(new double[] { combinedAltAllelesResult.getLogPriorOfAFEq0(), combinedAltAllelesResult.getLogPriorOfAFGT0() }, true),
+                MathUtils.normalizeFromLog(new double[]{combinedAltAllelesResult.getLogPriorOfAFEq0(), combinedAltAllelesResult.getLogPriorOfAFGT0() }, true),
                 logpRefByAllele);
     }
 

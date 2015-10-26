@@ -9,6 +9,7 @@ import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import org.broadinstitute.hellbender.CommandLineProgramTest;
+import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeBuilderNaturalLog;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
@@ -450,12 +451,12 @@ public final class GenotypeConcordanceTest extends CommandLineProgramTest {
     public void testGenotypeConcordanceDetermineState(final Allele truthAllele1, final Allele truthAllele2, final TruthState expectedTruthState,
                                                       final Allele callAllele1, final Allele callAllele2, final CallState expectedCallState) throws Exception {
         final List<Allele> truthAlleles = makeUniqueListOfAlleles(truthAllele1, truthAllele2);
-        final Genotype truthGt = GenotypeBuilder.create(TRUTH_SAMPLE_NAME, Arrays.asList(truthAllele1, truthAllele2));
+        final Genotype truthGt = GenotypeBuilderNaturalLog.create(TRUTH_SAMPLE_NAME, Arrays.asList(truthAllele1, truthAllele2));
 
         final VariantContext truthVariantContext = new VariantContextBuilder("test", snpLoc, snpLocStart, snpLocStop, truthAlleles).genotypes(truthGt).make();
 
         final List<Allele> callAlleles = makeUniqueListOfAlleles(callAllele1, callAllele2);
-        final Genotype callGt = GenotypeBuilder.create(CALL_SAMPLE_NAME, Arrays.asList(callAllele1, callAllele2));
+        final Genotype callGt = GenotypeBuilderNaturalLog.create(CALL_SAMPLE_NAME, Arrays.asList(callAllele1, callAllele2));
         final VariantContext callVariantContext = new VariantContextBuilder("test", snpLoc, snpLocStart, snpLocStop, callAlleles).genotypes(callGt).make();
 
         testGenotypeConcordanceDetermineState(truthVariantContext, expectedTruthState, callVariantContext, expectedCallState, 0, 0);
@@ -464,7 +465,7 @@ public final class GenotypeConcordanceTest extends CommandLineProgramTest {
     @Test
     public void testGenotypeConcordanceDetermineStateNull() throws Exception {
         final List<Allele> alleles = makeUniqueListOfAlleles(Aref, C);
-        final Genotype gt1 = GenotypeBuilder.create(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C));
+        final Genotype gt1 = GenotypeBuilderNaturalLog.create(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C));
         final VariantContext vc1 = new VariantContextBuilder("test", snpLoc, snpLocStart, snpLocStop, alleles).genotypes(gt1).make();
 
         testGenotypeConcordanceDetermineState(null, TruthState.MISSING, null, CallState.MISSING, 0, 0);
@@ -478,11 +479,11 @@ public final class GenotypeConcordanceTest extends CommandLineProgramTest {
 
         // Filtering on the variant context
         final List<Allele> alleles1 = makeUniqueListOfAlleles(Aref, C);
-        final Genotype gt1 = GenotypeBuilder.create(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C));
+        final Genotype gt1 = GenotypeBuilderNaturalLog.create(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C));
         final VariantContext vcFiltered = new VariantContextBuilder("test", snpLoc, snpLocStart, snpLocStop, alleles1).genotypes(gt1).filters(filters).make();
 
         final List<Allele> alleles2 = makeUniqueListOfAlleles(Aref, T);
-        final Genotype gt2 = GenotypeBuilder.create(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, T));
+        final Genotype gt2 = GenotypeBuilderNaturalLog.create(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, T));
         final VariantContext vcNotFiltered = new VariantContextBuilder("test", snpLoc, snpLocStart, snpLocStop, alleles2).genotypes(gt2).make();
 
         testGenotypeConcordanceDetermineState(vcFiltered, TruthState.VC_FILTERED, vcNotFiltered, CallState.HET_REF_VAR1, 0, 0);
@@ -492,7 +493,7 @@ public final class GenotypeConcordanceTest extends CommandLineProgramTest {
         // Filtering on the genotype
         final List<String> gtFilters = new ArrayList<>(Arrays.asList("WICKED"));
         final List<Allele> alleles3 = makeUniqueListOfAlleles(Aref, C);
-        final Genotype gt3 = new GenotypeBuilder(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C)).filters(gtFilters).make();
+        final Genotype gt3 = new GenotypeBuilderNaturalLog(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C)).filters(gtFilters).make();
         final VariantContext vcGtFiltered = new VariantContextBuilder("test", snpLoc, snpLocStart, snpLocStop, alleles3).genotypes(gt3).make();
 
         testGenotypeConcordanceDetermineState(vcGtFiltered, TruthState.GT_FILTERED, vcNotFiltered, CallState.HET_REF_VAR1, 0, 0);
@@ -503,7 +504,7 @@ public final class GenotypeConcordanceTest extends CommandLineProgramTest {
     @Test
     public void testGenotypeConcordanceDetermineStateDp() throws Exception {
         final List<Allele> allelesNormal = makeUniqueListOfAlleles(Aref, C);
-        final Genotype gtNormal = GenotypeBuilder.create(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C));
+        final Genotype gtNormal = GenotypeBuilderNaturalLog.create(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C));
         final VariantContext vcNormal = new VariantContextBuilder("test", snpLoc, snpLocStart, snpLocStop, allelesNormal).genotypes(gtNormal).make();
 
         final List<Allele> allelesLowDp = makeUniqueListOfAlleles(Aref, C);
@@ -523,11 +524,11 @@ public final class GenotypeConcordanceTest extends CommandLineProgramTest {
     @Test
     public void testGenotypeConcordanceDetermineStateGq() throws Exception {
         final List<Allele> allelesNormal = makeUniqueListOfAlleles(Aref, C);
-        final Genotype gtNormal = GenotypeBuilder.create(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C));
+        final Genotype gtNormal = GenotypeBuilderNaturalLog.create(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C));
         final VariantContext vcNormal = new VariantContextBuilder("test", snpLoc, snpLocStart, snpLocStop, allelesNormal).genotypes(gtNormal).make();
 
         final List<Allele> allelesLowGq = makeUniqueListOfAlleles(Aref, C);
-        final Genotype gtLowGq = new GenotypeBuilder(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C)).GQ(4).make();
+        final Genotype gtLowGq = new GenotypeBuilderNaturalLog(TRUTH_SAMPLE_NAME, Arrays.asList(Aref, C)).GQ(4).make();
         final VariantContext vcLowGq = new VariantContextBuilder("test", snpLoc, snpLocStart, snpLocStop, allelesLowGq).genotypes(gtLowGq).make();
 
         testGenotypeConcordanceDetermineState(vcLowGq, TruthState.LOW_GQ, vcNormal, CallState.HET_REF_VAR1, 20, 0);

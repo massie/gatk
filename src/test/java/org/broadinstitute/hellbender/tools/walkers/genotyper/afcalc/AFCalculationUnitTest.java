@@ -2,6 +2,7 @@ package org.broadinstitute.hellbender.tools.walkers.genotyper.afcalc;
 
 import htsjdk.variant.variantcontext.*;
 import org.apache.commons.lang.ArrayUtils;
+import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeBuilderNaturalLog;
 import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypingEngine;
 import org.broadinstitute.hellbender.utils.MathUtils;
 import org.broadinstitute.hellbender.utils.QualityUtils;
@@ -60,7 +61,7 @@ public final class AFCalculationUnitTest extends BaseTest {
     }
 
     protected static Genotype makePL(final List<Allele> expectedGT, int ... pls) {
-        GenotypeBuilder gb = new GenotypeBuilder("sample" + sampleNameCounter++);
+        GenotypeBuilderNaturalLog gb = new GenotypeBuilderNaturalLog("sample" + sampleNameCounter++);
         gb.alleles(expectedGT);
         gb.PL(pls);
         return gb.make();
@@ -274,9 +275,9 @@ public final class AFCalculationUnitTest extends BaseTest {
         public PNonRefData scale(final int scaleFactor) {
             if ( canScale ) {
                 final int[] PLs = new int[g.getPL().length];
-                //TODO: make sure that the cast to int doesn't become bizarre after switch to natural log
-                for ( int i = 0; i < PLs.length; i++ ) PLs[i] = g.getPL()[i] * ((int) Math.log(scaleFactor)+1);
-                final Genotype scaledG = new GenotypeBuilder(g).PL(PLs).make();
+                //NOTE: this is a mapping from PL (phred) to PL, so we retain the base-10 logarithm
+                for ( int i = 0; i < PLs.length; i++ ) PLs[i] = g.getPL()[i] * ((int) Math.log10(scaleFactor)+1);
+                final Genotype scaledG = new GenotypeBuilderNaturalLog(g).PL(PLs).make();
                 final double scaledPNonRef = pNonRef < 0.5 ? pNonRef / scaleFactor : 1 - ((1-pNonRef) / scaleFactor);
                 return new PNonRefData(vc, scaledG, scaledPNonRef, tolerance, true);
             } else {

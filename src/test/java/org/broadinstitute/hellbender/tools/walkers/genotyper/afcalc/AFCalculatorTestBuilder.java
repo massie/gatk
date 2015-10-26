@@ -2,6 +2,7 @@ package org.broadinstitute.hellbender.tools.walkers.genotyper.afcalc;
 
 import htsjdk.variant.variantcontext.*;
 import org.apache.commons.lang.ArrayUtils;
+import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeBuilderNaturalLog;
 import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypingEngine;
 import org.broadinstitute.hellbender.utils.MathUtils;
 import org.broadinstitute.hellbender.utils.Utils;
@@ -172,7 +173,7 @@ public final class AFCalculatorTestBuilder {
     }
 
     public Genotype makePL(final List<Allele> expectedGT, int ... pls) {
-        GenotypeBuilder gb = new GenotypeBuilder("sample" + sampleNameCounter++);
+        GenotypeBuilderNaturalLog gb = new GenotypeBuilderNaturalLog("sample" + sampleNameCounter++);
         gb.alleles(expectedGT);
         gb.PL(pls);
         return gb.make();
@@ -188,7 +189,7 @@ public final class AFCalculatorTestBuilder {
     }
 
     public Genotype makePL(final GenotypeType type, final int nonTypePL, final int altI) {
-        GenotypeBuilder gb = new GenotypeBuilder("sample" + sampleNameCounter++);
+        GenotypeBuilderNaturalLog gb = new GenotypeBuilderNaturalLog("sample" + sampleNameCounter++);
         gb.alleles(getAlleles(type, altI));
 
         final int[] pls = new int[numPLs()];

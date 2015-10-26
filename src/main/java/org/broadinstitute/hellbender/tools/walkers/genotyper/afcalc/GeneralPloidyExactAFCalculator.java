@@ -407,7 +407,7 @@ public final class GeneralPloidyExactAFCalculator extends ExactAFCalculator {
             final int declaredPloidy = g.getPloidy();
             final int ploidy = declaredPloidy <= 0 ? defaultPloidy : declaredPloidy;
             if ( !g.hasLikelihoods() ) {
-                newGTs.add(GenotypeBuilder.create(g.getSampleName(), GATKVariantContextUtils.noCallAlleles(ploidy)));
+                newGTs.add(GenotypeBuilderNaturalLog.create(g.getSampleName(), GATKVariantContextUtils.noCallAlleles(ploidy)));
                 continue;
             }
 
@@ -428,10 +428,10 @@ public final class GeneralPloidyExactAFCalculator extends ExactAFCalculator {
 
             // if there is no mass on the (new) likelihoods, then just no-call the sample
             if ( MathUtils.sum(newLikelihoods) > GATKVariantContextUtils.SUM_GL_THRESH_NOCALL ) {
-                newGTs.add(GenotypeBuilder.create(g.getSampleName(), GATKVariantContextUtils.noCallAlleles(ploidy)));
+                newGTs.add(GenotypeBuilderNaturalLog.create(g.getSampleName(), GATKVariantContextUtils.noCallAlleles(ploidy)));
             }
             else {
-                final GenotypeBuilder gb = new GenotypeBuilder(g);
+                final GenotypeBuilderNaturalLog gb = new GenotypeBuilderNaturalLog(g);
 
                 if ( numNewAltAlleles == 0 ) {
                     gb.noPL();
@@ -456,11 +456,12 @@ public final class GeneralPloidyExactAFCalculator extends ExactAFCalculator {
     /**
      * Assign genotypes (GTs) to the samples in the Variant Context greedily based on the PLs
      *
+     * @param gb
      * @param newLikelihoods       the PL array
      * @param allelesToUse         the list of alleles to choose from (corresponding to the PLs)
      * @param numChromosomes        Number of chromosomes per pool
      */
-    private static void assignGenotype(final GenotypeBuilder gb,
+    private static void assignGenotype(final GenotypeBuilderNaturalLog gb,
                                        final double[] newLikelihoods,
                                        final List<Allele> allelesToUse,
                                        final int numChromosomes) {
@@ -479,8 +480,7 @@ public final class GeneralPloidyExactAFCalculator extends ExactAFCalculator {
         }
 
         if ( numNewAltAlleles > 0 ) {
-            //TODO: fix this
-            gb.log10PError(GenotypeLikelihoods.getGQLog10FromLikelihoods(PLindex, newLikelihoods));
+            gb.logPError(GenotypeLikelihoods.getGQLog10FromLikelihoods(PLindex, newLikelihoods));
         }
     }
 

@@ -2,8 +2,8 @@ package org.broadinstitute.hellbender.tools.walkers.genotyper.afcalc;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.GenotypesContext;
+import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeBuilderNaturalLog;
 import org.broadinstitute.hellbender.utils.test.BaseTest;
 import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
@@ -82,8 +82,7 @@ public final class GeneralPloidyAFCalculationModelUnitTest extends BaseTest {
         for (int i=0; i < ploidy; i++)
             alleles[i] = Allele.NO_CALL;
 
-        //TODO: GenotypeBuilder assumes log10 GLs
-        return new GenotypeBuilder(name, Arrays.asList(alleles)).PL(gls).make();
+        return new GenotypeBuilderNaturalLog(name, Arrays.asList(alleles)).PL(gls).make();
     }                              
 
     @DataProvider(name = "getGLs")
