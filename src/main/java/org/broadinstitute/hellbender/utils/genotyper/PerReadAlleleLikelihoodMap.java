@@ -183,13 +183,13 @@ public final class PerReadAlleleLikelihoodMap {
                     haplotypeLikelihood += MathUtils.approximateLogSumLog(likelihood_i, likelihood_j) + MathUtils.LOG_ONE_HALF;
 
                     // fast exit.  If this diploid pair is already worse than the max, just stop and look at the next pair
-                    if ( haplotypeLikelihood < maxElement ) {
+                    if (haplotypeLikelihood < maxElement) {
                         break;
                     }
                 }
 
                 // keep track of the max element and associated alleles
-                if ( haplotypeLikelihood > maxElement ) {
+                if (haplotypeLikelihood > maxElement) {
                     bestAllele1 = allele_i;
                     bestAllele2 = allele_j;
                     maxElement = haplotypeLikelihood;
@@ -198,7 +198,7 @@ public final class PerReadAlleleLikelihoodMap {
         }
 
         if ( maxElement == Double.NEGATIVE_INFINITY ) {
-            throw new IllegalStateException("max likelihood is " + maxElement + " indicating something has gone wrong");
+           throw new IllegalStateException("max likelihood is " + maxElement + " indicating something has gone wrong");
         }
         if (bestAllele1 == null || bestAllele2 == null){
             throw new IllegalStateException("best alleles are null, indicating something has gone wrong");

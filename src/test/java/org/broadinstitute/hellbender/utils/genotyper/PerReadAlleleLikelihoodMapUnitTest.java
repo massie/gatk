@@ -6,6 +6,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.util.Locatable;
 import htsjdk.variant.variantcontext.Allele;
 import org.broadinstitute.hellbender.utils.BaseUtils;
+import org.broadinstitute.hellbender.utils.MathUtils;
 import org.broadinstitute.hellbender.utils.SimpleInterval;
 import org.broadinstitute.hellbender.utils.Utils;
 import org.broadinstitute.hellbender.utils.fasta.CachingIndexedFastaSequenceFile;
@@ -257,26 +258,26 @@ public final class PerReadAlleleLikelihoodMapUnitTest extends BaseTest {
         tests.add(new Object[]{10, 0.1, false, Arrays.asList(0.0)});
         tests.add(new Object[]{10, 0.1, true, Arrays.asList(-10.0)});
         tests.add(new Object[]{10, 0.1, false, Arrays.asList(0.0, -10.0)});
-        tests.add(new Object[]{10, 0.1, true, Arrays.asList(-5.0, -10.0)});
-        tests.add(new Object[]{100, 0.1, false, Arrays.asList(-5.0, -10.0)});
-        tests.add(new Object[]{100, 0.01, true, Arrays.asList(-5.0, -10.0)});
-        tests.add(new Object[]{100, 0.01, false, Arrays.asList(-5.0, -10.0, -3.0)});
-        tests.add(new Object[]{100, 0.01, false, Arrays.asList(-5.0, -10.0, -2.0)});
-        tests.add(new Object[]{100, 0.01, true, Arrays.asList(-5.0, -10.0, -4.2)});
-        tests.add(new Object[]{100, 0.001, true, Arrays.asList(-5.0, -10.0)});
-        tests.add(new Object[]{100, 0.001, false, Arrays.asList(-5.0, -10.0, 0.0)});
+        tests.add(new Object[]{10, 0.1, true, Arrays.asList(-11.0, -23.0)});
+        tests.add(new Object[]{100, 0.1, false, Arrays.asList(-11.0, -23.0)});
+        tests.add(new Object[]{100, 0.01, true, Arrays.asList(-11.0, -23.0)});
+        tests.add(new Object[]{100, 0.01, false, Arrays.asList(-11.0, -23.0, -7.0)});
+        tests.add(new Object[]{100, 0.01, false, Arrays.asList(-11.0, -23.0, -4.5)});
+        tests.add(new Object[]{100, 0.01, true, Arrays.asList(-11.0, -23.0, -10.0)});
+        tests.add(new Object[]{100, 0.001, true, Arrays.asList(-11.0, -23.0)});
+        tests.add(new Object[]{100, 0.001, false, Arrays.asList(-11.0, -23.0, 0.0)});
 
         return tests.toArray(new Object[][]{});
     }
 
     @Test(dataProvider = "PoorlyModelledReadData")
-    public void testPoorlyModelledRead(final int readLen, final double maxErrorRatePerBase, final boolean expected, final List<Double> log10likelihoods) {
+    public void testPoorlyModelledRead(final int readLen, final double maxErrorRatePerBase, final boolean expected, final List<Double> loglikelihoods) {
         final byte[] bases = Utils.dupBytes((byte)'A', readLen);
         final byte[] quals = Utils.dupBytes((byte) 40, readLen);
 
         final GATKRead read = ArtificialReadUtils.createArtificialRead(bases, quals, readLen + "M");
 
-        final boolean actual = PerReadAlleleLikelihoodMap.readIsPoorlyModelled(read, log10likelihoods, maxErrorRatePerBase);
+        final boolean actual = PerReadAlleleLikelihoodMap.readIsPoorlyModelled(read, loglikelihoods, maxErrorRatePerBase);
         Assert.assertEquals(actual, expected);
     }
 
