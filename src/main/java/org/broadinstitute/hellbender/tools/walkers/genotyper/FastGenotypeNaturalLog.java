@@ -57,6 +57,7 @@ import java.util.Map;
  * @author Mark DePristo
  * @since 05/12
  */
+@SuppressWarnings("serial") //HORRID HACK ALERT!!!
 public final class FastGenotypeNaturalLog extends Genotype {
     private final List<Allele> alleles;
     private final boolean isPhased;

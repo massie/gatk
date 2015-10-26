@@ -33,6 +33,16 @@ public final class MathUtils {
     }
 
     /**
+     * Creates a new sample of k ints from [0..n-1], without duplicates.
+     * @throws NumberIsTooLargeException if {@code k > n}.
+     * @throws NotStrictlyPositiveException if {@code k <= 0}.
+     */
+    public static int[] sampleIndicesWithoutReplacement(final int n, final int k) {
+        //No error checking : RandomDataGenetator.nextPermutation does it
+        return Utils.getRandomDataGenerator().nextPermutation(n, k);
+    }
+
+    /**
      * A helper class to maintain a cache of log values
      */
     public static final class LogCache {

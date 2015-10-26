@@ -146,6 +146,11 @@ public class GenotypeLikelihoodsNaturalLog {
         return Arrays.equals(getAsPLs(), that.getAsPLs());
     }
 
+    //HACK -- THIS IS JUST OT REMOVE COMPILER WARNING!!!!
+    @Override public int hashCode() {
+        return logLikelihoods.hashCode();
+    }
+
     //Return genotype likelihoods as an EnumMap with Genotypes as keys and likelihoods as values
     //Returns null in case of missing likelihoods
     //CHANGE: argument renamed

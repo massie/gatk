@@ -12,9 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Test {@link org.broadinstitute.gatk.tools.walkers.genotyper.InfiniteRandomMatingPopulationModel}
- */
+
 public final class InfiniteRandomMatingPopulationModelUnitTest {
 
     @Test(dataProvider="ploidyAndMaximumAlleleAndReadCountsData")
@@ -31,7 +29,7 @@ public final class InfiniteRandomMatingPopulationModelUnitTest {
         SampleListUnitTester.assertSampleList(gLikelihoods,sampleList.asListOfSamples());
         final int sampleCount = gLikelihoods.numberOfSamples();
         for (int i = 0; i < sampleCount; i++) {
-            final GenotypeLikelihoods sampleLikelihoods = gLikelihoods.sampleLikelihoods(i);
+            final GenotypeLikelihoodsNaturalLog sampleLikelihoods = gLikelihoods.sampleLikelihoods(i);
             Assert.assertNotNull(sampleLikelihoods);
             final double[] values = sampleLikelihoods.getAsVector();
             Assert.assertNotNull(values);
