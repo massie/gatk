@@ -3,6 +3,7 @@ package org.broadinstitute.hellbender.utils.variant;
 import htsjdk.variant.variantcontext.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeBuilderNaturalLog;
+import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeLikelihoodsNaturalLog;
 import org.broadinstitute.hellbender.utils.BaseUtils;
 import org.broadinstitute.hellbender.utils.GenomeLoc;
 import org.broadinstitute.hellbender.utils.MathUtils;
@@ -503,7 +504,8 @@ public final class GATKVariantContextUtilsUnitTest extends BaseTest {
             Assert.assertEquals(value.getGQ(), expectedValue.getGQ(), "GQ values aren't equal");
             Assert.assertEquals(value.hasLikelihoods(), expectedValue.hasLikelihoods(), "Either both have likelihoods or both not");
             if ( value.hasLikelihoods() )
-                Assert.assertEquals(value.getLikelihoods().getAsVector(), expectedValue.getLikelihoods().getAsVector(), "Genotype likelihoods aren't equal");
+                Assert.assertEquals(GenotypeLikelihoodsNaturalLog.likelihoodsFromGenotype(value),
+                        GenotypeLikelihoodsNaturalLog.likelihoodsFromGenotype(expectedValue), "Genotype likelihoods aren't equal");
         }
     }
 

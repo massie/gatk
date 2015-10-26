@@ -98,7 +98,7 @@ public class GenotypeLikelihoodsNaturalLog {
     }
 
     /**
-     * Returns the genotypes likelihoods in negative log10 vector format.  pr{AA} = x, this
+     * Returns the genotypes likelihoods in negative log vector format.  pr{AA} = x, this
      * vector returns math.log10(x) for each of the genotypes.  Can return null if the
      * genotype likelihoods are "missing".
      *
@@ -113,6 +113,12 @@ public class GenotypeLikelihoodsNaturalLog {
 
         return logLikelihoods;
     }
+
+    //CHANGED: new convenience methoid
+    public static double[] likelihoodsFromGenotype(final Genotype genotype) {
+        return genotype.hasLikelihoods() ? PLsToGLs(genotype.getPL()) : null;
+    }
+
 
     public int[] getAsPLs() {
         final double[] GLs = getAsVector();

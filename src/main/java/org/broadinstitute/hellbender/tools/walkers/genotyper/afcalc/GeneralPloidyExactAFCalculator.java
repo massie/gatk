@@ -412,7 +412,7 @@ public final class GeneralPloidyExactAFCalculator extends ExactAFCalculator {
             }
 
             // create the new likelihoods array from the alleles we are allowed to use
-            final double[] originalLikelihoods = g.getLikelihoods().getAsVector();
+            final double[] originalLikelihoods = GenotypeLikelihoodsNaturalLog.likelihoodsFromGenotype(g);
             double[] newLikelihoods;
 
             // Optimization: if # of new alt alleles = 0 (pure ref call), keep original likelihoods so we skip normalization

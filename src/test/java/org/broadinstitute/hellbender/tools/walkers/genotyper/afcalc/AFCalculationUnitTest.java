@@ -3,6 +3,7 @@ package org.broadinstitute.hellbender.tools.walkers.genotyper.afcalc;
 import htsjdk.variant.variantcontext.*;
 import org.apache.commons.lang.ArrayUtils;
 import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeBuilderNaturalLog;
+import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeLikelihoodsNaturalLog;
 import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypingEngine;
 import org.broadinstitute.hellbender.utils.MathUtils;
 import org.broadinstitute.hellbender.utils.QualityUtils;
@@ -483,8 +484,8 @@ public final class AFCalculationUnitTest extends BaseTest {
             final AFCalculationResult resultTrackerFlat = cfgFlatPrior.execute();
             final AFCalculationResult resultTrackerNoPrior = cfgNoPrior.execute();
 
-            final double pRefWithNoPrior = AB.getLikelihoods().getAsVector()[0];
-            final double pHetWithNoPrior = AB.getLikelihoods().getAsVector()[1]  - Math.log(0.5);
+            final double pRefWithNoPrior = GenotypeLikelihoodsNaturalLog.likelihoodsFromGenotype(AB)[0];
+            final double pHetWithNoPrior = GenotypeLikelihoodsNaturalLog.likelihoodsFromGenotype(AB)[1]  - Math.log(0.5);
             final double nonRefPost = Math.exp(pHetWithNoPrior) / (Math.exp(pRefWithNoPrior) + Math.exp(pHetWithNoPrior));
             final double logNonRefPost = Math.log(nonRefPost);
 
@@ -502,17 +503,17 @@ public final class AFCalculationUnitTest extends BaseTest {
         for ( int REF_PL = 10; REF_PL <= 20; REF_PL += 10 ) {
             final Genotype AB = makePL(Arrays.asList(A, C), REF_PL, 0, 10000);
 
-            for ( int logNonRefPrior = 1; logNonRefPrior < 10*REF_PL; logNonRefPrior += 1 ) {
-                final double refPrior = 1 - QualityUtils.qualToErrorProb(logNonRefPrior);
+            for ( int phredNonRefPrior = 1; phredNonRefPrior < 10*REF_PL; phredNonRefPrior += 1 ) {
+                final double refPrior = 1 - QualityUtils.qualToErrorProb(phredNonRefPrior);
                 final double nonRefPrior = (1-refPrior) / 2;
                 final double[] priors = MathUtils.normalizeFromLog(MathUtils.toLog(new double[]{refPrior, nonRefPrior, nonRefPrior}), true);
                 if ( ! Double.isInfinite(priors[1]) ) {
-                    GetGLsTest cfg = new GetGLsTest(model, 1, Arrays.asList(AB), priors, "pNonRef" + logNonRefPrior);
+                    GetGLsTest cfg = new GetGLsTest(model, 1, Arrays.asList(AB), priors, "pNonRef" + phredNonRefPrior);
                     final AFCalculationResult resultTracker = cfg.execute();
                     final int actualAC = resultTracker.getAlleleCountsOfMLE()[0];
 
-                    final double pRefWithPrior = AB.getLikelihoods().getAsVector()[0] + priors[0];
-                    final double pHetWithPrior = AB.getLikelihoods().getAsVector()[1] + priors[1] - Math.log10(0.5);
+                    final double pRefWithPrior = GenotypeLikelihoodsNaturalLog.likelihoodsFromGenotype(AB)[0] + priors[0];
+                    final double pHetWithPrior = GenotypeLikelihoodsNaturalLog.likelihoodsFromGenotype(AB)[1] + priors[1] - Math.log(0.5);
                     final double nonRefPost = Math.exp(pHetWithPrior) / (Math.exp(pRefWithPrior) + Math.exp(pHetWithPrior));
                     final double logNonRefPost = Math.log(nonRefPost);
 
@@ -524,7 +525,7 @@ public final class AFCalculationUnitTest extends BaseTest {
 
                     final int expectedMLEAC = 1; // the MLE is independent of the prior
                     Assert.assertEquals(actualAC, expectedMLEAC,
-                            "actual AC with priors " + logNonRefPrior + " not expected "
+                            "actual AC with priors " + phredNonRefPrior + " not expected "
                                     + expectedMLEAC + " priors " + Utils.join(",", priors));
                 }
             }
