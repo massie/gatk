@@ -1,6 +1,7 @@
 package org.broadinstitute.hellbender.tools.walkers.genotyper.afcalc;
 
-import org.junit.Assert;
+//import org.junit.Assert;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public final class ExactACcountsUnitTest {
@@ -20,7 +21,7 @@ public final class ExactACcountsUnitTest {
 
         Assert.assertTrue(ec1.getCounts() == ec1Same.getCounts());
         Assert.assertFalse(ec1.getCounts() == ec1Equal.getCounts());
-        Assert.assertArrayEquals(ec1.getCounts(), ec1Equal.getCounts());
+        Assert.assertEquals(ec1.getCounts(), ec1Equal.getCounts());
 
         Assert.assertEquals(ec1, ec1Equal);
         Assert.assertEquals(ec1Equal, ec1);

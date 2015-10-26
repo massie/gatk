@@ -12,6 +12,10 @@ import org.testng.annotations.Test;
 import java.util.*;
 
 public final class AFCalculationResultUnitTest extends BaseTest {
+
+    //the normalized log probability of a flat prior for a two-valued variable
+    static final double[] logEven = MathUtils.normalizeFromLog(new double[]{0.5, 0.5}, true);
+
     private static class MyTest {
         final double[] Ls, expectedPosteriors;
 
@@ -30,24 +34,28 @@ public final class AFCalculationResultUnitTest extends BaseTest {
     public Object[][] makeTestCombineGLs() {
         List<Object[]> tests = new ArrayList<>();
 
+        //if likelihoods and prior are flat, so is posterior
         tests.add(new Object[]{new MyTest(logEven, logEven)});
 
-        //TODO: I don't think I have to switch to natural log, but in case it fails. . .
-        for ( double L0 = -1e9; L0 < 0.0; L0 /= 10.0 ) {
-            for ( double L1 = -1e2; L1 < 0.0; L1 /= 100.0 ) {
+
+        for ( double L0 = -1e9; L0 < -1e-40; L0 /= 100.0 ) {
+            for ( double L1 = -1e2; L1 < -1e-40; L1 /= 100.0 ) {
                 final double[] input = new double[]{L0, L1};
                 final double[] expected = MathUtils.normalizeFromLog(input, true);
                 tests.add(new Object[]{new MyTest(input, expected)});
             }
         }
 
-        for ( double bigBadL = -1e50; bigBadL < -1e200; bigBadL *= 10 ) {
+        //if likelihoods are (x,y), where x << y and hence log(x) is big and negative, and the prior is flat,
+        //then the normalized posterior is (x/(x+y), y/(x+y)) ~ (0, 1)
+        for ( double bigBadL = -1e50; bigBadL < -1e200; bigBadL *= 1000 ) {
             // test that a huge bad likelihood remains, even with a massive better result
             for ( final double betterL : Arrays.asList(-1000.0, -100.0, -10.0, -1.0, -0.1, -0.01, -0.001, 0.0)) {
                 tests.add(new Object[]{new MyTest(new double[]{bigBadL, betterL}, new double[]{bigBadL, 0.0})});
                 tests.add(new Object[]{new MyTest(new double[]{betterL, bigBadL}, new double[]{0.0, bigBadL})});
             }
         }
+
 
         // test that a modest bad likelihood with an ~0.0 value doesn't get lost
         for ( final double badL : Arrays.asList(-10000.0, -1000.0, -100.0, -10.0)) {
@@ -57,14 +65,18 @@ public final class AFCalculationResultUnitTest extends BaseTest {
 
         // test that a non-ref site gets reasonable posteriors with an ~0.0 value doesn't get lost
         for ( final double nonRefL : Arrays.asList(-100.0, -50.0, -10.0, -9.0, -8.0, -7.0, -6.0, -5.0)) {
-            tests.add(new Object[]{new MyTest(new double[]{0.0, nonRefL}, new double[]{0.0, nonRefL})});
+            final double[] input = new double[]{0.0, nonRefL};
+            final double[] expected = MathUtils.normalizeFromLog(input, true);
+            tests.add(new Object[]{new MyTest(input, expected)});
+
+            //TODO: verify that the old test code in the following line was wrong
+            //tests.add(new Object[]{new MyTest(new double[]{0.0, nonRefL}, new double[]{0.0, nonRefL})});
         }
 
         return tests.toArray(new Object[][]{});
     }
 
 
-    static final double[] logEven = MathUtils.normalizeFromLog(new double[]{0.5, 0.5}, true);
     private static final Allele C = Allele.create("C");
     private static final Allele A = Allele.create("A", true);
     static final List<Allele> alleles = Arrays.asList(A, C);
