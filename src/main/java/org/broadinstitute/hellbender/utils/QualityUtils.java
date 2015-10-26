@@ -128,6 +128,16 @@ public final class QualityUtils {
     }
 
     /**
+     * Convert a phred-scaled value to a natural log-scaled value ( 30 => log(0.001) )
+     *
+     * @param phred a phred scaled quality
+     * @return a log probability
+     */
+    public static double phredToLogProb(final double phred) {
+        return phred * PHRED_TO_LOG_PROB_MULTIPLIER;
+    }
+
+    /**
      * Convert a phred-scaled quality score to its probability of being wrong (Q30 => 0.001)
      *
      * This is the Phred-style conversion, *not* the Illumina-style conversion.
