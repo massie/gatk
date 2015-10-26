@@ -3,10 +3,7 @@ package org.broadinstitute.hellbender.tools.walkers.genotyper.afcalc;
 import com.google.common.annotations.VisibleForTesting;
 import htsjdk.variant.variantcontext.*;
 import org.broadinstitute.hellbender.exceptions.GATKException;
-import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeAlleleCounts;
-import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeLikelihoodCalculator;
-import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeLikelihoodCalculators;
-import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeLikelihoodsWrapper;
+import org.broadinstitute.hellbender.tools.walkers.genotyper.*;
 import org.broadinstitute.hellbender.utils.MathUtils;
 import org.broadinstitute.hellbender.utils.Utils;
 import org.broadinstitute.hellbender.utils.variant.GATKVariantContextUtils;
@@ -90,7 +87,7 @@ public final class GeneralPloidyExactAFCalculator extends ExactAFCalculator {
             if (!genotype.hasPL()) {
                 continue;
             }
-            final double[] gls = GenotypeLikelihoodsWrapper.fromGenotype(genotype).getAsVector();
+            final double[] gls = GenotypeLikelihoodsNaturalLog.fromGenotype(genotype).getAsVector();
             if (MathUtils.sum(gls) >= GATKVariantContextUtils.SUM_GL_THRESH_NOCALL) {
                 continue;
             }
@@ -140,7 +137,7 @@ public final class GeneralPloidyExactAFCalculator extends ExactAFCalculator {
             if (!genotype.hasPL()) {
                 continue;
             }
-            final double[] gls = GenotypeLikelihoodsWrapper.fromGenotype(genotype).getAsVector();
+            final double[] gls = GenotypeLikelihoodsNaturalLog.fromGenotype(genotype).getAsVector();
             if (MathUtils.sum(gls) >= GATKVariantContextUtils.SUM_GL_THRESH_NOCALL) {
                 continue;
             }

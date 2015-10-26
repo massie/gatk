@@ -77,6 +77,11 @@ public class GenotypeLikelihoodsNaturalLog {
         return new GenotypeLikelihoodsNaturalLog(logLikelihoods);
     }
 
+    //CHANGE: new method added for convenience
+    public final static GenotypeLikelihoodsNaturalLog fromGenotype(final Genotype genotype) {
+        return genotype.hasLikelihoods() ? fromPLs(genotype.getPL()) : null;
+    }
+
     public final static GenotypeLikelihoodsNaturalLog fromPLs(final int[] pls) {
         return new GenotypeLikelihoodsNaturalLog(PLsToGLs(pls));
     }

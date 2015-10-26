@@ -14,7 +14,7 @@ import java.util.List;
  */
 public final class GenotypingLikelihoods<A extends Allele> implements SampleList, AlleleList<A> {
 
-    private final GenotypeLikelihoodsWrapper[] likelihoods;
+    private final GenotypeLikelihoodsNaturalLog[] likelihoods;
 
     private final PloidyModel ploidyModel;
 
@@ -36,7 +36,7 @@ public final class GenotypingLikelihoods<A extends Allele> implements SampleList
      *  does not correspond with the number of likelihoods arrays in {@code likelihoods}
      */
     GenotypingLikelihoods(final AlleleList<A> alleles, final PloidyModel ploidyModel,
-                          final List<GenotypeLikelihoodsWrapper> likelihoods) {
+                          final List<GenotypeLikelihoodsNaturalLog> likelihoods) {
         if (alleles == null) {
             throw new IllegalArgumentException("allele list cannot be null");
         }
@@ -50,8 +50,8 @@ public final class GenotypingLikelihoods<A extends Allele> implements SampleList
             throw new IllegalArgumentException("there must be exactly one likelihood set for each sample");
         }
 
-        this.likelihoods = likelihoods.toArray(new GenotypeLikelihoodsWrapper[likelihoods.size()]);
-        for (final GenotypeLikelihoodsWrapper likelihood : this.likelihoods) {
+        this.likelihoods = likelihoods.toArray(new GenotypeLikelihoodsNaturalLog[likelihoods.size()]);
+        for (final GenotypeLikelihoodsNaturalLog likelihood : this.likelihoods) {
             if (likelihood == null)
                 throw new IllegalArgumentException("no genotype likelihood is allowed to be null");
         }
@@ -99,7 +99,7 @@ public final class GenotypingLikelihoods<A extends Allele> implements SampleList
      *
      * @return never {@code null}.
      */
-    public GenotypeLikelihoodsWrapper sampleLikelihoods(final int sampleIndex) {
+    public GenotypeLikelihoodsNaturalLog sampleLikelihoods(final int sampleIndex) {
         return likelihoods[sampleIndex];
     }
 

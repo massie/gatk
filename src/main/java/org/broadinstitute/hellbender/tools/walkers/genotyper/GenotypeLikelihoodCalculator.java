@@ -272,7 +272,7 @@ public final class GenotypeLikelihoodCalculator {
      *
      * @return never {@code null}.
      */
-    public <A extends Allele> GenotypeLikelihoodsWrapper genotypeLikelihoods(final LikelihoodMatrix<A> logLikelihoods) {
+    public <A extends Allele> GenotypeLikelihoodsNaturalLog genotypeLikelihoods(final LikelihoodMatrix<A> logLikelihoods) {
         if (logLikelihoods == null) {
             throw new IllegalArgumentException("the likelihood map cannot be null");
         }
@@ -291,7 +291,7 @@ public final class GenotypeLikelihoodCalculator {
         final double[][] genotypeLikelihoodByRead = genotypeLikelihoodByRead(readLikelihoodComponentsByAlleleCount, readCount);
         final double[] readLikelihoodsByGenotypeIndex = genotypeLikelihoods(genotypeLikelihoodByRead, readCount);
 
-        return GenotypeLikelihoodsWrapper.fromLogLikelihoods(readLikelihoodsByGenotypeIndex);
+        return GenotypeLikelihoodsNaturalLog.fromLogLikelihoods(readLikelihoodsByGenotypeIndex);
     }
 
     /**

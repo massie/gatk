@@ -55,7 +55,7 @@ public final class GenotypeLikelihoodCalculatorUnitTest {
         final int sampleCount = readCount.length;
         for (int s = 0; s < sampleCount ; s++) {
             final LikelihoodMatrix<Allele> sampleLikelihoods = readLikelihoods.sampleMatrix(s);
-            final GenotypeLikelihoodsWrapper genotypeLikelihoods = calculator.genotypeLikelihoods(sampleLikelihoods);
+            final GenotypeLikelihoodsNaturalLog genotypeLikelihoods = calculator.genotypeLikelihoods(sampleLikelihoods);
             final double[] genotypeLikelihoodsDoubles = genotypeLikelihoods.getAsVector();
             Assert.assertEquals(genotypeLikelihoodsDoubles.length, genotypeCount);
             for (int i = 0; i < testGenotypeCount; i++) {

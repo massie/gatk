@@ -1,7 +1,7 @@
 package org.broadinstitute.hellbender.tools.walkers.genotyper.afcalc;
 
 import htsjdk.variant.variantcontext.*;
-import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeLikelihoodsWrapper;
+import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypeLikelihoodsNaturalLog;
 import org.broadinstitute.hellbender.utils.MathUtils;
 import org.broadinstitute.hellbender.utils.Utils;
 import org.broadinstitute.hellbender.utils.variant.GATKVCFConstants;
@@ -76,7 +76,7 @@ abstract class ExactAFCalculator extends AFCalculator {
 
                 //Genotype::getLikelihoods returns an htsjdk GenotypeLikelihoods object that converts phred-scaled
                 //PLs into log10-scaled GLs
-                final double[] gls = GenotypeLikelihoodsWrapper.fromGenotype(sample).getAsVector();
+                final double[] gls = GenotypeLikelihoodsNaturalLog.fromGenotype(sample).getAsVector();
 
                 if ( MathUtils.sum(gls) < GATKVariantContextUtils.SUM_GL_THRESH_NOCALL ) {
                     genotypeLikelihoods.add(gls);

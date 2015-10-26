@@ -71,7 +71,7 @@ public final class InfiniteRandomMatingPopulationModel implements GenotypingMode
     private <A extends Allele> GenotypingLikelihoods<A> noSampleLikelihoods(final AlleleList<A> genotypingAlleles,
                                                                             final GenotypingData<A> data) {
         @SuppressWarnings("unchecked")
-        final List<GenotypeLikelihoodsWrapper> likelihoods = Collections.EMPTY_LIST;
+        final List<GenotypeLikelihoodsNaturalLog> likelihoods = Collections.EMPTY_LIST;
         return new GenotypingLikelihoods<>(genotypingAlleles,data.ploidyModel(), likelihoods);
 
     }
@@ -84,7 +84,7 @@ public final class InfiniteRandomMatingPopulationModel implements GenotypingMode
         final int alleleCount = genotypingAlleles.numberOfAlleles();
         final GenotypeLikelihoodCalculator likelihoodsCalculator = getLikelihoodsCalculator(samplePloidy,alleleCount);
         final LikelihoodMatrix<A> sampleLikelihoods = alleleLikelihoodMatrixMapper.apply(data.readLikelihoods().sampleMatrix(0));
-        final List<GenotypeLikelihoodsWrapper> genotypeLikelihoods = Collections.singletonList(likelihoodsCalculator.genotypeLikelihoods(sampleLikelihoods));
+        final List<GenotypeLikelihoodsNaturalLog> genotypeLikelihoods = Collections.singletonList(likelihoodsCalculator.genotypeLikelihoods(sampleLikelihoods));
         return new GenotypingLikelihoods<>(genotypingAlleles,ploidyModel,genotypeLikelihoods);
     }
 
@@ -104,7 +104,7 @@ public final class InfiniteRandomMatingPopulationModel implements GenotypingMode
                                                                                                        final AlleleLikelihoodMatrixMapper<A> alleleLikelihoodMatrixMapper,
                                                                                                        final int sampleCount,
                                                                                                        final PloidyModel ploidyModel) {
-        final List<GenotypeLikelihoodsWrapper> genotypeLikelihoods = new ArrayList<>(sampleCount);
+        final List<GenotypeLikelihoodsNaturalLog> genotypeLikelihoods = new ArrayList<>(sampleCount);
         final int alleleCount = genotypingAlleles.numberOfAlleles();
         for (int i = 0; i < sampleCount; i++) {
             final int samplePloidy = ploidyModel.samplePloidy(i);
@@ -121,7 +121,7 @@ public final class InfiniteRandomMatingPopulationModel implements GenotypingMode
                                                                                                      final int sampleCount,
                                                                                                      final PloidyModel ploidyModel) {
         final int samplePloidy = ploidyModel.samplePloidy(0);
-        final List<GenotypeLikelihoodsWrapper> genotypeLikelihoods = new ArrayList<>(sampleCount);
+        final List<GenotypeLikelihoodsNaturalLog> genotypeLikelihoods = new ArrayList<>(sampleCount);
         final int alleleCount = genotypingAlleles.numberOfAlleles();
         final GenotypeLikelihoodCalculator likelihoodsCalculator = getLikelihoodsCalculator(samplePloidy,alleleCount);
         for (int i = 0; i < sampleCount; i++) {
