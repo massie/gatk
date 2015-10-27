@@ -12,6 +12,13 @@ import java.util.Arrays;
 /**
  * MathUtils is a static class (no instantiation allowed!) with some useful math methods.
  */
+
+/**
+ * TABLE OF CONTENTS
+ *
+ * 1. CACHES OF EXPENSIVE FUNCTIONS
+ * 2/ ARRAYS OF LOGARITHMS
+ */
 public final class MathUtils {
 
     /**
@@ -43,8 +50,9 @@ public final class MathUtils {
     }
 
     /**
-     * A helper class to maintain a cache of log values
+     * CACHES OF EXPENSIVE-TO-COMPUTE FUNCTIONS
      */
+
     public static final class LogCache {
         /**
          * Get the value of log(n), expanding the cache as necessary
@@ -82,7 +90,7 @@ public final class MathUtils {
 
         //initialize with the special case: log(0) = NEGATIVE_INFINITY
         private static double[] cache = { Double.NEGATIVE_INFINITY };
-    }
+    }   //end of LogCache class
 
     /**
      * Encapsulates the second term of Jacobian log identity for differences up to MAX_TOLERANCE
@@ -115,10 +123,218 @@ public final class MathUtils {
         //  Phred scores Q and Q+1 differ by 0.1 in their corresponding log-10 probabilities, and by
         // 0.1 * log(10) in natural log probabilities.  Setting TABLE_STEP to an exact divisor of this
         // quantity ensures that approximateSumLog in fact caches exact values for integer phred scores
-        private static final double TABLE_STEP = (0.1 * Math.log(10.0))/1000;
+        private static final double TABLE_STEP = (0.1 * LOG_10)/1000;
         private static final double INV_STEP = 1.0 / TABLE_STEP;
         private static double[] cache = null;
     }
+
+    public static double logFactorial(final int x) {
+        if (x >= LogFactorialCache.size() || x < 0)
+            return Gamma.logGamma(x + 1);
+        else
+            return LogFactorialCache.get(x);
+    }
+
+    /**
+     * Wrapper class so that the logFactorial array is only calculated if it's used
+     */
+    private static class LogFactorialCache {
+
+        /**
+         * The size of the precomputed cache.  Must be a positive number!
+         */
+        private static final int CACHE_SIZE = 10_000;
+
+        public static int size() { return CACHE_SIZE; }
+
+        public static double get(final int n) {
+            if (cache == null)
+                initialize();
+            return cache[n];
+        }
+
+        private static void initialize() {
+            if (cache == null) {
+                LogCache.ensureCacheContains(CACHE_SIZE);
+                cache = new double[CACHE_SIZE];
+                cache[0] = 0.0;
+                for (int k = 1; k < cache.length; k++)
+                    cache[k] = cache[k-1] + LogCache.get(k);
+            }
+        }
+
+        private static double[] cache = null;
+    }
+
+    /**
+     * Calculates the log of the multinomial coefficient. Designed to prevent
+     * overflows even with very large numbers.
+     *
+     * @param n total number of trials
+     * @param k array of any size with the number of successes for each grouping (k1, k2, k3, ..., km)
+     * @return {@link Double#NaN NaN} if {@code a > 0}, otherwise the corresponding value.
+     */
+    public static double logMultinomialCoefficient(final int n, final int[] k) {
+        if ( n < 0 )
+            throw new IllegalArgumentException("n: Must have non-negative number of trials");
+        double denominator = 0.0;
+        int sum = 0;
+        for (int x : k) {
+            if ( x < 0 )
+                throw new IllegalArgumentException("x element of k: Must have non-negative observations of group");
+            if ( x > n )
+                throw new IllegalArgumentException("x element of k, n: Group observations must be bounded by k");
+            denominator += logFactorial(x);
+            sum += x;
+        }
+        if ( sum != n )
+            throw new IllegalArgumentException("k and n: Sum of observations in multinomial must sum to total number of trials");
+        return logFactorial(n) - denominator;
+    }
+
+    public static double logBinomialCoefficient(final int n, final int k) {
+        if ( n < 0 ) {
+            throw new IllegalArgumentException("n: Must have non-negative number of trials");
+        }
+        if ( k > n || k < 0 ) {
+            throw new IllegalArgumentException("k: Must have non-negative number of successes, and no more successes than number of trials");
+        }
+
+        return logFactorial(n) - logFactorial(k) - logFactorial(n - k);
+    }
+
+    /**
+     * Computes a binomial probability.  This is computed using the formula
+     * <p/>
+     * B(k; n; p) = [ n! / ( k! (n - k)! ) ] (p^k)( (1-p)^k )
+     * <p/>
+     * where n is the number of trials, k is the number of successes, and p is the probability of success
+     *
+     * @param n number of Bernoulli trials
+     * @param k number of successes
+     * @param p probability of success
+     * @return the binomial probability of the specified configuration.  Computes values down to about 1e-237.
+     */
+    public static double binomialProbability(final int n, final int k, final double p) {
+        return Math.exp(logBinomialProbability(n, k, Math.log(p)));
+    }
+
+    /**
+     * binomial Probability(int, int, double) with log applied to result
+     */
+    public static double logBinomialProbability(final int n, final int k, final double logp) {
+        if ( logp > 1e-18 )
+            throw new IllegalArgumentException("logp: Log-probability must be 0 or less");
+        double logOneMinusP = Math.log(1 - Math.exp(logp));
+        return logBinomialCoefficient(n, k) + logp * k + logOneMinusP * (n - k);
+    }
+
+
+
+
+    /**
+     * ARRAYS OF LOGARITHMS
+     */
+
+    /**
+     * Given array {v1, v2 . . .} compute log(exp(v1) + exp(v2) . . .) while avoiding underflow
+     */
+    public static double logSumLog(final double[] logValues, final int start, final int finish) {
+        if (start >= finish) {
+            return Double.NEGATIVE_INFINITY;
+        }
+        final int maxElementIndex = maxElementIndex(logValues, start, finish);
+        final double maxValue = logValues[maxElementIndex];
+        if(maxValue == Double.NEGATIVE_INFINITY) {
+            return maxValue;
+        }
+        double sum = 1.0;
+        for (int i = start; i < finish; i++) {
+            double curVal = logValues[i];
+            double scaled_val = curVal - maxValue;
+            if (i == maxElementIndex || curVal == Double.NEGATIVE_INFINITY) {
+                continue;
+            } else {
+                sum += Math.exp(scaled_val);
+            }
+        }
+        if ( Double.isNaN(sum) || sum == Double.POSITIVE_INFINITY ) {
+            throw new IllegalArgumentException("log p: Values must be non-infinite and non-NAN");
+        }
+        return maxValue + (sum != 1.0 ? Math.log(sum) : 0.0);
+    }
+
+    public static double logSumLog(final double[] logValues, final int start) {
+        return logSumLog(logValues, start, logValues.length);
+    }
+
+    public static double logSumLog(final double[] logValues) {
+        return logSumLog(logValues, 0);
+    }
+
+    public static double approximateLogSumLog(final double[] vals, final int startIndex, final int endIndex) {
+
+        final int maxElementIndex = MathUtils.maxElementIndex(vals, startIndex, endIndex);
+        double approxSum = vals[maxElementIndex];
+
+        for (int i = startIndex; i < endIndex; i++) {
+            if (i == maxElementIndex || vals[i] == Double.NEGATIVE_INFINITY) {
+                continue;
+            }
+
+            final double diff = approxSum - vals[i];
+            if (diff < JacobianLogTable.MAX_TOLERANCE) {
+                // See notes from the 2-inout implementation below
+                approxSum += JacobianLogTable.get(diff);
+            }
+        }
+
+        return approxSum;
+    }
+
+    public static double approximateLogSumLog(final double[] vals, final int endIndex) {
+        return approximateLogSumLog(vals, 0, endIndex);
+    }
+
+    public static double approximateLogSumLog(final double[] vals) {
+        return approximateLogSumLog(vals, vals.length);
+    }
+
+    public static double approximateLogSumLog(final double a, final double b) {
+        // this code works only when a <= b so we flip them if the order is opposite
+        if (a > b) {
+            return approximateLogSumLog(b, a);
+        }
+
+        if (a == Double.NEGATIVE_INFINITY) {
+            return b;
+        }
+
+        final double diff = b - a;
+        if (diff >= JacobianLogTable.MAX_TOLERANCE) {
+            return b;
+        }
+
+        // OK, so |b-a| < tol
+        // we need to compute log(e^a + e^b) = log(e^b(1 + e^(a-b))) = b + log(1 + e^(-(b-a)))
+        // we compute the second term as a table lookup with integer quantization
+        // we have pre-stored correction for 0,0.1,0.2,... 10.0
+        return b + JacobianLogTable.get(diff);
+    }
+
+    public static double approximateLogSumLog(final double a, final double b, final double c) {
+        return approximateLogSumLog(a, approximateLogSumLog(b, c));
+    }
+
+    public static double sumLog(final double[] logvalues) {
+        return Math.exp(logSumLog(logvalues));
+    }
+
+
+
+
+
+
 
     // A fast implementation of the Math.round() method.  This method does not perform
     // under/overflow checking, so this shouldn't be used in the general case (but is fine
@@ -150,63 +366,9 @@ public final class MathUtils {
         return true; // everything is good
     }
 
-    public static double approximateLogSumLog(final double[] vals) {
-        return approximateLogSumLog(vals, vals.length);
-    }
 
-    public static double approximateLogSumLog(final double[] vals, final int endIndex) {
-        return approximateLogSumLog(vals, 0, endIndex);
-    }
 
-    public static double approximateLogSumLog(final double[] vals, final int startIndex, final int endIndex) {
 
-        final int maxElementIndex = MathUtils.maxElementIndex(vals, startIndex, endIndex);
-        double approxSum = vals[maxElementIndex];
-
-        for (int i = startIndex; i < endIndex; i++) {
-            if (i == maxElementIndex || vals[i] == Double.NEGATIVE_INFINITY) {
-                continue;
-            }
-
-            final double diff = approxSum - vals[i];
-            if (diff < JacobianLogTable.MAX_TOLERANCE) {
-                // See notes from the 2-inout implementation below
-                approxSum += JacobianLogTable.get(diff);
-            }
-        }
-
-        return approxSum;
-    }
-
-    public static double approximateLogSumLog(final double a, final double b, final double c) {
-        return approximateLogSumLog(a, approximateLogSumLog(b, c));
-    }
-
-    public static double approximateLogSumLog(final double a, final double b) {
-        // this code works only when a <= b so we flip them if the order is opposite
-        if (a > b) {
-            return approximateLogSumLog(b, a);
-        }
-
-        if (a == Double.NEGATIVE_INFINITY) {
-            return b;
-        }
-
-        final double diff = b - a;
-        if (diff >= JacobianLogTable.MAX_TOLERANCE) {
-            return b;
-        }
-
-        // OK, so |b-a| < tol
-        // we need to compute log(e^a + e^b) = log(e^b(1 + e^(a-b))) = b + log(1 + e^(-(b-a)))
-        // we compute the second term as a table lookup with integer quantization
-        // we have pre-stored correction for 0,0.1,0.2,... 10.0
-        return b + JacobianLogTable.get(diff);
-    }
-
-    public static double sumLog(final double[] logvalues) {
-        return Math.exp(logSumLog(logvalues));
-    }
 
     public static double sum(final double[] values) {
         double s = 0.0;
@@ -271,31 +433,7 @@ public final class MathUtils {
         return MathArrays.ebeAdd(x, y);
     }
 
-    /**
-     * Calculates the log of the multinomial coefficient. Designed to prevent
-     * overflows even with very large numbers.
-     *
-     * @param n total number of trials
-     * @param k array of any size with the number of successes for each grouping (k1, k2, k3, ..., km)
-     * @return {@link Double#NaN NaN} if {@code a > 0}, otherwise the corresponding value.
-     */
-    public static double logMultinomialCoefficient(final int n, final int[] k) {
-        if ( n < 0 )
-            throw new IllegalArgumentException("n: Must have non-negative number of trials");
-        double denominator = 0.0;
-        int sum = 0;
-        for (int x : k) {
-            if ( x < 0 )
-                throw new IllegalArgumentException("x element of k: Must have non-negative observations of group");
-            if ( x > n )
-                throw new IllegalArgumentException("x element of k, n: Group observations must be bounded by k");
-            denominator += logFactorial(x);
-            sum += x;
-        }
-        if ( sum != n )
-            throw new IllegalArgumentException("k and n: Sum of observations in multinomial must sum to total number of trials");
-        return logFactorial(n) - denominator;
-    }
+
 
     /**
      * Converts a real space array of numbers (typically probabilities) into a log array
@@ -341,77 +479,8 @@ public final class MathUtils {
     }
 
 
-    /**
-     */
-    public static double logBinomialCoefficient(final int n, final int k) {
-        if ( n < 0 ) {
-            throw new IllegalArgumentException("n: Must have non-negative number of trials");
-        }
-        if ( k > n || k < 0 ) {
-            throw new IllegalArgumentException("k: Must have non-negative number of successes, and no more successes than number of trials");
-        }
 
-        return logFactorial(n) - logFactorial(k) - logFactorial(n - k);
-    }
 
-    /**
-     * Computes a binomial probability.  This is computed using the formula
-     * <p/>
-     * B(k; n; p) = [ n! / ( k! (n - k)! ) ] (p^k)( (1-p)^k )
-     * <p/>
-     * where n is the number of trials, k is the number of successes, and p is the probability of success
-     *
-     * @param n number of Bernoulli trials
-     * @param k number of successes
-     * @param p probability of success
-     * @return the binomial probability of the specified configuration.  Computes values down to about 1e-237.
-     */
-    public static double binomialProbability(final int n, final int k, final double p) {
-        return Math.exp(logBinomialProbability(n, k, Math.log(p)));
-    }
-
-    /**
-     * binomial Probability(int, int, double) with log applied to result
-     */
-    public static double logBinomialProbability(final int n, final int k, final double logp) {
-        if ( logp > 1e-18 )
-            throw new IllegalArgumentException("logp: Log-probability must be 0 or less");
-        double logOneMinusP = Math.log(1 - Math.exp(logp));
-        return logBinomialCoefficient(n, k) + logp * k + logOneMinusP * (n - k);
-    }
-
-    public static double logSumLog(final double[] logValues, final int start) {
-        return logSumLog(logValues, start, logValues.length);
-    }
-
-    public static double logSumLog(final double[] logValues) {
-        return logSumLog(logValues, 0);
-    }
-
-    public static double logSumLog(final double[] logValues, final int start, final int finish) {
-        if (start >= finish) {
-            return Double.NEGATIVE_INFINITY;
-        }
-        final int maxElementIndex = maxElementIndex(logValues, start, finish);
-        final double maxValue = logValues[maxElementIndex];
-        if(maxValue == Double.NEGATIVE_INFINITY) {
-            return maxValue;
-        }
-        double sum = 1.0;
-        for (int i = start; i < finish; i++) {
-            double curVal = logValues[i];
-            double scaled_val = curVal - maxValue;
-            if (i == maxElementIndex || curVal == Double.NEGATIVE_INFINITY) {
-                continue;
-            } else {
-                sum += Math.exp(scaled_val);
-            }
-        }
-        if ( Double.isNaN(sum) || sum == Double.POSITIVE_INFINITY ) {
-            throw new IllegalArgumentException("log p: Values must be non-infinite and non-NAN");
-        }
-        return maxValue + (sum != 1.0 ? Math.log(sum) : 0.0);
-    }
 
     /**
      * normalizes the log-probability array.  ASSUMES THAT ALL ARRAY ENTRIES ARE <= 0 (<= 1 IN REAL-SPACE).
@@ -601,57 +670,9 @@ public final class MathUtils {
         return log10 * LOG_10;
     }
 
-    /**
-     * Converts LN to LOG10
-     * @param ln log(x)
-     * @return log10(x)
-     */
-    public static double lnToLog10(final double ln) {
-        return ln / LOG_10;
-    }
-
-
     //
     // useful common utility routines
     //
-
-    public static double logFactorial(final int x) {
-        if (x >= LogFactorialCache.size() || x < 0)
-            return Gamma.logGamma(x + 1);
-        else
-            return LogFactorialCache.get(x);
-    }
-
-    /**
-     * Wrapper class so that the logFactorial array is only calculated if it's used
-     */
-    private static class LogFactorialCache {
-
-        /**
-         * The size of the precomputed cache.  Must be a positive number!
-         */
-        private static final int CACHE_SIZE = 10_000;
-
-        public static int size() { return CACHE_SIZE; }
-
-        public static double get(final int n) {
-            if (cache == null)
-                initialize();
-            return cache[n];
-        }
-
-        private static void initialize() {
-            if (cache == null) {
-                LogCache.ensureCacheContains(CACHE_SIZE);
-                cache = new double[CACHE_SIZE];
-                cache[0] = 0.0;
-                for (int k = 1; k < cache.length; k++)
-                    cache[k] = cache[k-1] + LogCache.get(k);
-            }
-        }
-
-        private static double[] cache = null;
-    }
 
     /**
      * Compute in a numerical correct way the quantity log(1-x)
@@ -697,7 +718,7 @@ public final class MathUtils {
     }
 
     /**
-     * Now for some matrix methods
+     * MATRICES
      */
 
     /**
