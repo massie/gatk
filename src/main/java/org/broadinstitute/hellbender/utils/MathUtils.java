@@ -215,6 +215,13 @@ public final class MathUtils {
         return s;
     }
 
+    public static double sum(final double[] values, final int endIndex) {
+        double s = 0.0;
+        for (int j = 0; j < endIndex; j++)
+            s += values[j];
+        return s;
+    }
+
     public static long sum(final int[] x) {
         long total = 0;
         for (int v : x)

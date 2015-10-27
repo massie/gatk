@@ -312,9 +312,10 @@ public final class GenotypeLikelihoodCalculator {
             double s = - denominator;
 
             //TODO: use MathUtils sum method
-            for (int r = 0; r < readCount; r++) {
-                s += likelihoodsByRead[r];
-            }
+            //for (int r = 0; r < readCount; r++) {
+             //   s += likelihoodsByRead[r];
+            //}
+            s += MathUtils.sum(likelihoodsByRead, readCount);
             result[g] = s;
         }
         return result;
