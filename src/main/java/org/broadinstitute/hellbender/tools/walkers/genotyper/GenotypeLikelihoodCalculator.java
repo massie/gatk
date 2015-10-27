@@ -110,7 +110,7 @@ public final class GenotypeLikelihoodCalculator {
 
 
     /**
-     * Buffer field use as a temporal container for sorted allele counts when calculating the likelihood of a
+     * Buffer field used as a temporal container for sorted allele counts when calculating the likelihood of a
      * read in a genotype.
      * <p>
      *      This array follows the same format as {@link GenotypeAlleleCounts#sortedAlleleCounts}. Each component in the

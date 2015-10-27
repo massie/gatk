@@ -302,7 +302,8 @@ public final class AFCalculationUnitTest extends BaseTest {
         final VariantContext vc3 = new VariantContextBuilder("x","1", 1, 1, Arrays.asList(A, C, G)).make();
         final AFCalculatorTestBuilder.PriorType priorType = AFCalculatorTestBuilder.PriorType.flat;
 
-        final double TOLERANCE = 0.5;
+        //This is the tolerance for log probabilities, that is, the log of the tolerance of probability ratios
+        final double TOLERANCE = MathUtils.log10ToLog(0.5);
 
         final List<PNonRefData> initialPNonRefData = Arrays.asList(
                 // bi-allelic sites

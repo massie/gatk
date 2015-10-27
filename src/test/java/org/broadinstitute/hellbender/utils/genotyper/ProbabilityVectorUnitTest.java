@@ -35,7 +35,7 @@ public final class ProbabilityVectorUnitTest{
         Assert.assertEquals(pv.getMaxVal(), 6);
         Assert.assertEquals(pv.getProbabilityVector().length, 7);
 
-        pv = new ProbabilityVector(new double[]{-30.1,-20.0,-100.0}, true);
+        pv = new ProbabilityVector(new double[]{-45,-20.0,-100.0}, true);
         Assert.assertEquals(pv.getMinVal(), 1);
         Assert.assertEquals(pv.getMaxVal(), 1);
         Assert.assertEquals(pv.getProbabilityVector().length, 1);
