@@ -19,10 +19,11 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        summary = "Concatenates one or more BAM files together as efficiently as possible. Assumes that the " +
-                "list of BAM files provided as INPUT are in the order that they should be concatenated and simply concatenates the bodies " +
-                "of the BAM files while retaining the header from the first file.  Operates via copying of the gzip blocks directly for speed " +
-                "but also supports generation of an MD5 on the output and indexing of the output BAM file. Only support BAM files, does not " +
+        summary = "Concatenates one or more BAM or CRAM files together as efficiently as possible. Assumes that the " +
+                "list of files provided as INPUT are in the order that they should be concatenated (for CRAM files this" +
+                "means the files should be presented in coordinate order) and simply concatenates the bodies " +
+                "of the input files while retaining the header from the first file.  Operates via copying of the gzip blocks directly for speed " +
+                "but also supports generation of an MD5 on the output and indexing of the output BAM file. Only support BAM and CRAM files, does not " +
                 "support SAM files.",
         oneLineSummary = "Concatenates one or more BAM files together as efficiently as possible",
         programGroup = ReadProgramGroup.class
@@ -40,7 +41,7 @@ public final class GatherBamFiles extends PicardCommandLineProgram {
 
     @Override
     protected Object doWork() {
-        final List<File> inputs = IOUtil.unrollFiles(INPUT, BamFileIoUtils.BAM_FILE_EXTENSION, ".sam");
+        final List<File> inputs = IOUtil.unrollFiles(INPUT, BamFileIoUtils.BAM_FILE_EXTENSION, ".sam", ".cram");
         for (final File f : inputs) IOUtil.assertFileIsReadable(f);
         IOUtil.assertFileIsWritable(OUTPUT);
 
@@ -75,12 +76,14 @@ public final class GatherBamFiles extends PicardCommandLineProgram {
         }
 
         try (final SAMFileWriter out =
-                     new SAMFileWriterFactory().setCreateIndex(createIndex).setCreateMd5File(createMd5).makeSAMOrBAMWriter(header, true, output))
+                     new SAMFileWriterFactory().setCreateIndex(createIndex).setCreateMd5File(createMd5).makeWriter(header, false, output, referenceFasta))
         {
             for (final File f : inputs) {
                 log.info("Gathering " + f.getAbsolutePath());
                 final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(f);
-                for (final SAMRecord rec : in) out.addAlignment(rec);
+                for (final SAMRecord rec : in) {
+                    out.addAlignment(rec);
+                }
                 CloserUtil.close(in);
             }
         }
