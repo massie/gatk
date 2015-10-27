@@ -440,13 +440,13 @@ public class PairHMMIndelErrorModel {
                 // L(Hi, Hj) = sum_reads ( Pr(R|Hi)/2 + Pr(R|Hj)/2)
                 //readLikelihoods[k][j] has log10(Pr(R_k) | H[j] )
                 for (int readIdx = 0; readIdx < readLikelihoods.length; readIdx++) {
-                    // Compute log10(10^x1/2 + 10^x2/2) = log10(10^x1+10^x2)-log10(2)
+                    // Compute log(exp(x1)/2 + exp(x2)/2) = log(exp(x1)+exp(x2))-log(2)
                     // First term is approximated by Jacobian log with table lookup.
                     if (Double.isInfinite(readLikelihoods[readIdx][i]) && Double.isInfinite(readLikelihoods[readIdx][j]))
                         continue;
                     final double li = readLikelihoods[readIdx][i];
                     final double lj = readLikelihoods[readIdx][j];
-                    haplotypeLikehoodMatrix[i][j] += MathUtils.approximateLogSumLog(li, lj) + MathUtils.LOG_ONE_HALF;
+                    haplotypeLikehoodMatrix[i][j] += MathUtils.approximateLogSumLog(li, lj) - MathUtils.LOG_2;
                 }
             }
         }

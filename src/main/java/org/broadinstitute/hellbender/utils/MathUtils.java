@@ -22,9 +22,9 @@ public final class MathUtils {
 
     public static final double LOG_10 = Math.log(10);
 
-    public static final double LOG_ONE_HALF = Math.log(0.5);
+    public static final double LOG_2 = Math.log(2);
 
-    private static final double LOG1MEXP_THRESHOLD = Math.log(0.5);
+    private static final double LOG1MEXP_THRESHOLD = -LOG_2;
 
     /**
      * Private constructor.  No instantiating this class!

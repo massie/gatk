@@ -177,10 +177,10 @@ public final class PerReadAlleleLikelihoodMap {
 
                 double haplotypeLikelihood = 0.0;
                 for( final Map.Entry<GATKRead, Map<Allele,Double>> entry : likelihoodReadMap.entrySet() ) {
-                    // Compute log(exp(x1)/2 + exp(x2)/2) = log(exp(x1)+exp(x2))+log(1/2)
+                    // Compute log(exp(x1)/2 + exp(x2)/2) = log(exp(x1)+exp(x2))-log(2)
                     final double likelihood_i = entry.getValue().get(allele_i);
                     final double likelihood_j = entry.getValue().get(allele_j);
-                    haplotypeLikelihood += MathUtils.approximateLogSumLog(likelihood_i, likelihood_j) + MathUtils.LOG_ONE_HALF;
+                    haplotypeLikelihood += MathUtils.approximateLogSumLog(likelihood_i, likelihood_j) - MathUtils.LOG_2;
 
                     // fast exit.  If this diploid pair is already worse than the max, just stop and look at the next pair
                     if (haplotypeLikelihood < maxElement) {
