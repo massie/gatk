@@ -308,15 +308,7 @@ public final class GenotypeLikelihoodCalculator {
         // instead of dividing each read likelihood by ploidy (in log space, subtracting log(ploidy))
         //we multiply them all and then divide by ploidy^readCount (in log space, subtract readCount*log(ploidy))
         for (int g = 0; g < genotypeCount; g++) {
-            final double[] likelihoodsByRead = readLikelihoodsByGenotypeIndex[g];
-            double s = - denominator;
-
-            //TODO: use MathUtils sum method
-            //for (int r = 0; r < readCount; r++) {
-             //   s += likelihoodsByRead[r];
-            //}
-            s += MathUtils.sum(likelihoodsByRead, readCount);
-            result[g] = s;
+            result[g] = MathUtils.sum(readLikelihoodsByGenotypeIndex[g], readCount) - denominator;
         }
         return result;
     }
