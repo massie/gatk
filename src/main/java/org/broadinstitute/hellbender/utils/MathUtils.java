@@ -16,8 +16,11 @@ import java.util.Arrays;
 /**
  * TABLE OF CONTENTS
  *
- * 1. CACHES OF EXPENSIVE FUNCTIONS
- * 2/ ARRAYS OF LOGARITHMS
+ * CACHES OF EXPENSIVE FUNCTIONS
+ * ARRAYS OF LOGARITHMS
+ * PROBABILITIES
+ * ARRAYS
+ * MATRICES
  */
 public final class MathUtils {
 
@@ -229,9 +232,6 @@ public final class MathUtils {
         return logBinomialCoefficient(n, k) + logp * k + logOneMinusP * (n - k);
     }
 
-
-
-
     /**
      * ARRAYS OF LOGARITHMS
      */
@@ -331,17 +331,9 @@ public final class MathUtils {
     }
 
 
-
-
-
-
-
-    // A fast implementation of the Math.round() method.  This method does not perform
-    // under/overflow checking, so this shouldn't be used in the general case (but is fine
-    // if one is already make those checks before calling in to the rounding).
-    public static int fastRound(final double d) {
-        return (d > 0.0) ? (int) (d + 0.5d) : (int) (d - 0.5d);
-    }
+    /**
+     * PROBABILITIES
+     */
 
     /**
      * Check that the log prob vector vector is well formed
@@ -365,122 +357,6 @@ public final class MathUtils {
 
         return true; // everything is good
     }
-
-
-
-
-
-    public static double sum(final double[] values) {
-        double s = 0.0;
-        for (double v : values)
-            s += v;
-        return s;
-    }
-
-    public static double sum(final double[] values, final int endIndex) {
-        double s = 0.0;
-        for (int j = 0; j < endIndex; j++)
-            s += values[j];
-        return s;
-    }
-
-    public static long sum(final int[] x) {
-        long total = 0;
-        for (int v : x)
-            total += v;
-        return total;
-    }
-
-    public static int sum(final byte[] x) {
-        int total = 0;
-        for (byte v : x)
-            total += (int)v;
-        return total;
-    }
-
-    public static long sum(final long[] x) {
-        int total = 0;
-        for (long v : x)
-            total += v;
-        return total;
-    }
-
-    /** Returns the sum of the elements in the array starting with start and ending before stop. */
-    public static long sum(final long[] arr, final int start, final int stop) {
-        return sum(Arrays.copyOfRange(arr, start, stop));
-    }
-
-    /** Compute Z=X-Y for two numeric vectors X and Y
-     *
-     * @param x                 First vector
-     * @param y                 Second vector
-     * @return Vector of same length as x and y so that z[k] = x[k]-y[k]
-     */
-    public static int[] vectorDiff(final int[]x, final int[] y) {
-        Utils.nonNull(x, "x is null");
-        Utils.nonNull(y, "y is null");
-        if (x.length != y.length)
-            throw new IllegalArgumentException("BUG: Lengths of x and y must be the same");
-
-        int[] result = new int[x.length];
-        for (int k=0; k <x.length; k++)
-            result[k] = x[k]-y[k];
-
-        return result;
-    }
-
-    public static double[] vectorSum(double[] x, double[] y) {
-        return MathArrays.ebeAdd(x, y);
-    }
-
-
-
-    /**
-     * Converts a real space array of numbers (typically probabilities) into a log array
-     *
-     * @param prRealSpace
-     * @return
-     */
-    public static double[] toLog(final double[] prRealSpace) {
-        final double[] logs = new double[prRealSpace.length];
-        for (int i = 0; i < prRealSpace.length; i++) {
-            logs[i] = Math.log(prRealSpace[i]);
-        }
-        return logs;
-    }
-
-    /**
-     * Compares double values for equality (within 1e-6), or inequality.
-     *
-     * @param a the first double value
-     * @param b the second double value
-     * @return -1 if a is greater than b, 0 if a is equal to be within 1e-6, 1 if b is greater than a.
-     */
-    public static byte compareDoubles(final double a, final double b) {
-        return compareDoubles(a, b, 1e-6);
-    }
-
-    /**
-     * Compares double values for equality (within epsilon), or inequality.
-     *
-     * @param a       the first double value
-     * @param b       the second double value
-     * @param epsilon the precision within which two double values will be considered equal
-     * @return -1 if a is greater than b, 0 if a is equal to be within epsilon, 1 if b is greater than a.
-     */
-    public static byte compareDoubles(final double a, final double b, final double epsilon) {
-        if (Math.abs(a - b) < epsilon) {
-            return 0;
-        }
-        if (a > b) {
-            return -1;
-        }
-        return 1;
-    }
-
-
-
-
 
     /**
      * normalizes the log-probability array.  ASSUMES THAT ALL ARRAY ENTRIES ARE <= 0 (<= 1 IN REAL-SPACE).
@@ -573,6 +449,56 @@ public final class MathUtils {
     }
 
 
+    /**
+     * ARRAYS
+     */
+
+    /** Calculate the mean of an array of doubles. */
+    public static double mean(final double[] in, final int start, final int stop) {
+        if ((stop - start) <= 0 ) return Double.NaN;
+
+        double total = 0;
+        for (int i = start; i < stop; ++i) {
+            total += in[i];
+        }
+
+        return total / (stop - start);
+    }
+
+    /** Calculate the (population) standard deviation of an array of doubles. */
+    public static double stddev(final double[] in, final int start, final int length) {
+        return stddev(in, start, length, mean(in, start, length));
+    }
+
+    /** Calculate the (population) standard deviation of an array of doubles. */
+    public static double stddev(final double[] in, final int start, final int stop, final double mean) {
+        if ((stop - start) <= 0) return Double.NaN;
+
+        double total = 0;
+        for (int i = start; i < stop; ++i) {
+            total += (in[i] * in[i]);
+        }
+
+        return Math.sqrt((total / (stop - start)) - (mean * mean));
+    }
+
+    /** "Promotes" an int[] into a double array with the same values (or as close as precision allows). */
+    public static double[] promote(final int[] is) {
+        final double[] ds = new double[is.length];
+        for (int i = 0; i < is.length; ++i) ds[i] = is[i];
+        return ds;
+    }
+
+    public static int countOccurrences(final boolean element, final boolean[] array) {
+        int count = 0;
+        for (final boolean b : array) {
+            if (element == b)
+                count++;
+        }
+
+        return count;
+    }
+
     public static int minElementIndex(final double[] array) {
         if (array == null || array.length == 0) {
             throw new IllegalArgumentException("Array cannot be null!");
@@ -604,7 +530,6 @@ public final class MathUtils {
         return array[minElementIndex(array)];
     }
 
-
     public static int maxElementIndex(final double[] array) {
         return maxElementIndex(array, array.length);
     }
@@ -633,89 +558,69 @@ public final class MathUtils {
         return array[maxElementIndex(array)];
     }
 
-    /**
-     * Checks that the result is a well-formed log probability
+    public static double sum(final double[] values) {
+        double s = 0.0;
+        for (double v : values)
+            s += v;
+        return s;
+    }
+
+    public static double sum(final double[] values, final int endIndex) {
+        double s = 0.0;
+        for (int j = 0; j < endIndex; j++)
+            s += values[j];
+        return s;
+    }
+
+    public static long sum(final int[] x) {
+        long total = 0;
+        for (int v : x)
+            total += v;
+        return total;
+    }
+
+    public static int sum(final byte[] x) {
+        int total = 0;
+        for (byte v : x)
+            total += (int)v;
+        return total;
+    }
+
+    public static long sum(final long[] x) {
+        int total = 0;
+        for (long v : x)
+            total += v;
+        return total;
+    }
+
+    /** Returns the sum of the elements in the array starting with start and ending before stop. */
+    public static long sum(final long[] arr, final int start, final int stop) {
+        return sum(Arrays.copyOfRange(arr, start, stop));
+    }
+
+    /** Compute Z=X-Y for two numeric vectors X and Y
      *
-     * @param result a supposedly well-formed log probability value.  By default allows
-     *               -Infinity values, as log(0.0) == -Infinity.
-     * @return true if result is really well formed
+     * @param x                 First vector
+     * @param y                 Second vector
+     * @return Vector of same length as x and y so that z[k] = x[k]-y[k]
      */
-    public static boolean goodLogProbability(final double result) {
-        return goodLogProbability(result, true);
+    public static int[] vectorDiff(final int[]x, final int[] y) {
+        Utils.nonNull(x, "x is null");
+        Utils.nonNull(y, "y is null");
+        if (x.length != y.length)
+            throw new IllegalArgumentException("BUG: Lengths of x and y must be the same");
+
+        int[] result = new int[x.length];
+        for (int k=0; k <x.length; k++)
+            result[k] = x[k]-y[k];
+
+        return result;
     }
 
-    /**
-     * Checks that the result is a well-formed log probability
-     *
-     * @param result a supposedly well-formed log probability value
-     * @param allowNegativeInfinity should we consider a -Infinity value ok?
-     * @return true if result is really well formed
-     */
-    public static boolean goodLogProbability(final double result, final boolean allowNegativeInfinity) {
-        return result <= 0.0 && result != Double.POSITIVE_INFINITY && (allowNegativeInfinity || result != Double.NEGATIVE_INFINITY) && ! Double.isNaN(result);
+    public static double[] vectorSum(double[] x, double[] y) {
+        return MathArrays.ebeAdd(x, y);
     }
 
-    /**
-     * Checks that the result is a well-formed probability
-     *
-     * @param result a supposedly well-formed probability value
-     * @return true if result is really well formed
-     */
-    public static boolean goodProbability(final double result) {
-        return result >= 0.0 && result <= 1.0 && ! Double.isInfinite(result) && ! Double.isNaN(result);
-    }
-
-
-    public static double log10ToLog(final double log10){
-        return log10 * LOG_10;
-    }
-
-    //
-    // useful common utility routines
-    //
-
-    /**
-     * Compute in a numerical correct way the quantity log(1-x)
-     *
-     * Uses the approximation log(1-x) = log(1/x - 1) + log(x) to avoid very quick underflow
-     * in 1-x when x is very small
-     *
-     * @param x a positive double value between 0.0 and 1.0
-     * @return an estimate of log(1-x)
-     */
-    public static double logOneMinusX(final double x) {
-        if ( x == 1.0 )
-            return Double.NEGATIVE_INFINITY;
-        else if ( x == 0.0 )
-            return 0.0;
-        else {
-            final double d = Math.log(1 / x - 1) + Math.log(x);
-            return Double.isInfinite(d) || d > 0.0 ? 0.0 : d;
-        }
-    }
-
-    /**
-     * Calculates {@code log(1-exp(a))} without losing precision.
-     *
-     * <p>
-     *     This is based on the approach described in:
-     *
-     * </p>
-     * <p>
-     *     Maechler M, Accurately Computing log(1-exp(-|a|)) Assessed by the Rmpfr package, 2012 <br/>
-     *     <a ref="http://cran.r-project.org/web/packages/Rmpfr/vignettes/log1mexp-note.pdf">Online document</a>.
-     *
-     * </p>
-     *
-     * @param a the input exponent.
-     * @return {@link Double#NaN NaN} if {@code a > 0}, otherwise the corresponding value.
-     */
-    public static double log1mexp(final double a) {
-        if (a > 0) return Double.NaN;
-        if (a == 0) return Double.NEGATIVE_INFINITY;
-
-        return (a < LOG1MEXP_THRESHOLD) ? Math.log1p(-Math.exp(a)) : Math.log(-Math.expm1(a));
-    }
 
     /**
      * MATRICES
@@ -804,54 +709,136 @@ public final class MathUtils {
     }
 
 
+    /**
+     * MISCELLANEOUS
+     */
 
+    /**
+     * Checks that the result is a well-formed log probability
+     *
+     * @param result a supposedly well-formed log probability value.  By default allows
+     *               -Infinity values, as log(0.0) == -Infinity.
+     * @return true if result is really well formed
+     */
+    public static boolean goodLogProbability(final double result) {
+        return goodLogProbability(result, true);
+    }
 
+    /**
+     * Checks that the result is a well-formed log probability
+     *
+     * @param result a supposedly well-formed log probability value
+     * @param allowNegativeInfinity should we consider a -Infinity value ok?
+     * @return true if result is really well formed
+     */
+    public static boolean goodLogProbability(final double result, final boolean allowNegativeInfinity) {
+        return result <= 0.0 && result != Double.POSITIVE_INFINITY && (allowNegativeInfinity || result != Double.NEGATIVE_INFINITY) && ! Double.isNaN(result);
+    }
 
+    /**
+     * Checks that the result is a well-formed probability
+     *
+     * @param result a supposedly well-formed probability value
+     * @return true if result is really well formed
+     */
+    public static boolean goodProbability(final double result) {
+        return result >= 0.0 && result <= 1.0 && ! Double.isInfinite(result) && ! Double.isNaN(result);
+    }
 
+    public static double log10ToLog(final double log10){
+        return log10 * LOG_10;
+    }
 
-    /** Calculate the mean of an array of doubles. */
-    public static double mean(final double[] in, final int start, final int stop) {
-        if ((stop - start) <= 0 ) return Double.NaN;
-
-        double total = 0;
-        for (int i = start; i < stop; ++i) {
-            total += in[i];
+    /**
+     * Converts a real space array of numbers (typically probabilities) into a log array
+     *
+     * @param prRealSpace
+     * @return
+     */
+    public static double[] toLog(final double[] prRealSpace) {
+        final double[] logs = new double[prRealSpace.length];
+        for (int i = 0; i < prRealSpace.length; i++) {
+            logs[i] = Math.log(prRealSpace[i]);
         }
-
-        return total / (stop - start);
+        return logs;
     }
 
-    /** Calculate the (population) standard deviation of an array of doubles. */
-    public static double stddev(final double[] in, final int start, final int length) {
-        return stddev(in, start, length, mean(in, start, length));
-    }
-
-    /** Calculate the (population) standard deviation of an array of doubles. */
-    public static double stddev(final double[] in, final int start, final int stop, final double mean) {
-        if ((stop - start) <= 0) return Double.NaN;
-
-        double total = 0;
-        for (int i = start; i < stop; ++i) {
-            total += (in[i] * in[i]);
+    /**
+     * Compute in a numerical correct way the quantity log(1-x)
+     *
+     * Uses the approximation log(1-x) = log(1/x - 1) + log(x) to avoid very quick underflow
+     * in 1-x when x is very small
+     *
+     * @param x a positive double value between 0.0 and 1.0
+     * @return an estimate of log(1-x)
+     */
+    public static double logOneMinusX(final double x) {
+        if ( x == 1.0 )
+            return Double.NEGATIVE_INFINITY;
+        else if ( x == 0.0 )
+            return 0.0;
+        else {
+            final double d = Math.log(1 / x - 1) + Math.log(x);
+            return Double.isInfinite(d) || d > 0.0 ? 0.0 : d;
         }
-
-        return Math.sqrt((total / (stop - start)) - (mean * mean));
     }
 
-    /** "Promotes" an int[] into a double array with the same values (or as close as precision allows). */
-    public static double[] promote(final int[] is) {
-        final double[] ds = new double[is.length];
-        for (int i = 0; i < is.length; ++i) ds[i] = is[i];
-        return ds;
+    /**
+     * Calculates {@code log(1-exp(a))} without losing precision.
+     *
+     * <p>
+     *     This is based on the approach described in:
+     *
+     * </p>
+     * <p>
+     *     Maechler M, Accurately Computing log(1-exp(-|a|)) Assessed by the Rmpfr package, 2012 <br/>
+     *     <a ref="http://cran.r-project.org/web/packages/Rmpfr/vignettes/log1mexp-note.pdf">Online document</a>.
+     *
+     * </p>
+     *
+     * @param a the input exponent.
+     * @return {@link Double#NaN NaN} if {@code a > 0}, otherwise the corresponding value.
+     */
+    public static double log1mexp(final double a) {
+        if (a > 0) return Double.NaN;
+        if (a == 0) return Double.NEGATIVE_INFINITY;
+
+        return (a < LOG1MEXP_THRESHOLD) ? Math.log1p(-Math.exp(a)) : Math.log(-Math.expm1(a));
     }
 
-    public static int countOccurrences(final boolean element, final boolean[] array) {
-        int count = 0;
-        for (final boolean b : array) {
-            if (element == b)
-                count++;
+    /**
+     * Compares double values for equality (within 1e-6), or inequality.
+     *
+     * @param a the first double value
+     * @param b the second double value
+     * @return -1 if a is greater than b, 0 if a is equal to be within 1e-6, 1 if b is greater than a.
+     */
+    public static byte compareDoubles(final double a, final double b) {
+        return compareDoubles(a, b, 1e-6);
+    }
+
+    /**
+     * Compares double values for equality (within epsilon), or inequality.
+     *
+     * @param a       the first double value
+     * @param b       the second double value
+     * @param epsilon the precision within which two double values will be considered equal
+     * @return -1 if a is greater than b, 0 if a is equal to be within epsilon, 1 if b is greater than a.
+     */
+    public static byte compareDoubles(final double a, final double b, final double epsilon) {
+        if (Math.abs(a - b) < epsilon) {
+            return 0;
         }
+        if (a > b) {
+            return -1;
+        }
+        return 1;
+    }
 
-        return count;
+    // A fast implementation of the Math.round() method.  This method does not perform
+    // under/overflow checking, so this shouldn't be used in the general case (but is fine
+    // if one is already make those checks before calling in to the rounding).
+    public static int fastRound(final double d) {
+        return (d > 0.0) ? (int) (d + 0.5d) : (int) (d - 0.5d);
     }
 }
