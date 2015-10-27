@@ -310,6 +310,8 @@ public final class GenotypeLikelihoodCalculator {
         for (int g = 0; g < genotypeCount; g++) {
             final double[] likelihoodsByRead = readLikelihoodsByGenotypeIndex[g];
             double s = - denominator;
+
+            //TODO: use MathUtils sum method
             for (int r = 0; r < readCount; r++) {
                 s += likelihoodsByRead[r];
             }
@@ -374,7 +376,7 @@ public final class GenotypeLikelihoodCalculator {
      */
     private void manyComponentGenotypeLikelihoodByRead(final GenotypeAlleleCounts genotypeAlleleCounts,
                                                        final double[] likelihoodByRead,
-                                                       final double[]readLikelihoodComponentsByAlleleCount,
+                                                       final double[] readLikelihoodComponentsByAlleleCount,
                                                        final int readCount) {
 
         // First we collect the allele likelihood component for all reads and place it

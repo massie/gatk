@@ -160,7 +160,7 @@ public final class MathUtils {
 
     public static double approximateLogSumLog(final double[] vals, final int startIndex, final int endIndex) {
 
-        final int maxElementIndex = MathUtils.maxElementIndex(vals, endIndex);
+        final int maxElementIndex = MathUtils.maxElementIndex(vals, startIndex, endIndex);
         double approxSum = vals[maxElementIndex];
 
         for (int i = startIndex; i < endIndex; i++) {

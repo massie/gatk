@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Constains utilities for tests that need to create read-likelihoods.
+ * Contains utilities for tests that need to create read-likelihoods.
  */
 public final class ReadLikelihoodsUnitTester {
 
@@ -34,7 +34,7 @@ public final class ReadLikelihoodsUnitTester {
     }
 
     /**
-     * produces a test likelihood depending on the sample, read and allele index.
+     * produces an arbitrary test likelihood depending on the sample, read and allele index.
      */
     private static double testLikelihood(final int sampleIndex, final int alleleIndex, final int readIndex) {
         return - Math.abs(3 * (sampleIndex + 1) + 7 * (alleleIndex + 1) + 11 * (readIndex + 1));
