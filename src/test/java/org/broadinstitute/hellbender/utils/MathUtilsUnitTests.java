@@ -221,7 +221,7 @@ public final class MathUtilsUnitTests extends BaseTest {
     }
 
     @Test
-    public void testCovarianceDivergences() {
+    public void testGeodesicDistance() {
         logger.warn("Executing testCovarianceDivergences");
         //two symmetric positive-definite matrices
         double[][] cov1 = { {5, 2, 3},
@@ -235,7 +235,6 @@ public final class MathUtilsUnitTests extends BaseTest {
         RealMatrix mat1 = new Array2DRowRealMatrix(cov1);
         RealMatrix mat2 = new Array2DRowRealMatrix(cov2);
 
-        Assert.assertEquals(MathUtils.covarianceKLDivergence(mat1, mat2), 3.65393, 1e-4);   //from Mathematica
         Assert.assertEquals(MathUtils.covarianceGeodesicDistance(mat1, mat2), 1.86205,1e-4);    //from Mathematica
     }
 

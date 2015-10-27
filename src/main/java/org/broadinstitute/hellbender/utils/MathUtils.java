@@ -766,40 +766,6 @@ public final class MathUtils {
     }
 
     /**
-     * Measure the difference between two covariance matrices in terms of the Kullback-Leibler
-     * divergence between associated Gaussians.
-     *
-     * If d is the dimension of these matrices, the KL divergence between zero-centered Gaussians
-     * with covariances A and B is (1/2){tr[A^(-1)B] + ln(det(A) - ln(det(B)) - d}.  Note: the KL
-     * divergence is not symmetric.  Switching A <--> B and averaging gives (1/2){tr[A^(-1)B] + tr[B^(-1)A] - d}
-     *
-     * @param cov1 a matrix covariance
-     * @param cov2 a matrix covariance
-     * @return the average of KL divergences, (KL(p|q) + KL(q|p))/2, where p and q are probability densities
-     * of zero-centered Gaussians with the give covariance
-     */
-    public static double covarianceKLDivergence(RealMatrix cov1, RealMatrix cov2) {
-        if (!isSymmetric(cov1) || !isSymmetric(cov2)) {
-            throw new GATKException("Covariance matrices must be symmetric.");
-        }
-
-        if (!isPositiveSemiDefinite(cov1) || !isPositiveSemiDefinite(cov2)) {
-            throw new GATKException("Covariance matrices must be positive semidefinite.");
-        }
-
-        int d = cov1.getRowDimension();
-
-        if (cov1.getRowDimension() != cov2.getRowDimension()) {
-            throw new GATKException("Can only compare covariance matrices of equal dimension.");
-        }
-
-        LUDecomposition LU1 = new LUDecomposition(cov1);
-        LUDecomposition LU2 = new LUDecomposition(cov2);
-
-        return (LU1.getSolver().solve(cov2).getTrace() + LU2.getSolver().solve(cov1).getTrace() - d)/2;
-    }
-
-    /**
      * Measure the geodesic distance between the two covariances within the manifold of symmetric,
      * positive-definite matrices.  This is also called the affine-invariant metric.
      *
@@ -836,6 +802,12 @@ public final class MathUtils {
         return matrixLog(mat).getFrobeniusNorm();
 
     }
+
+
+
+
+
+
 
     /** Calculate the mean of an array of doubles. */
     public static double mean(final double[] in, final int start, final int stop) {
