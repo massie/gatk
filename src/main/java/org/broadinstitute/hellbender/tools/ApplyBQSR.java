@@ -10,8 +10,10 @@ import org.broadinstitute.hellbender.cmdline.programgroups.ReadProgramGroup;
 import org.broadinstitute.hellbender.engine.FeatureContext;
 import org.broadinstitute.hellbender.engine.ReadWalker;
 import org.broadinstitute.hellbender.engine.ReferenceContext;
+import org.broadinstitute.hellbender.exceptions.UserException;
 import org.broadinstitute.hellbender.transformers.BQSRReadTransformer;
 import org.broadinstitute.hellbender.transformers.ReadTransformer;
+import org.broadinstitute.hellbender.utils.NGSPlatform;
 import org.broadinstitute.hellbender.utils.read.*;
 import org.broadinstitute.hellbender.utils.read.GATKRead;
 import org.broadinstitute.hellbender.utils.read.SAMFileGATKReadWriter;
@@ -51,6 +53,13 @@ public final class ApplyBQSR extends ReadWalker{
         final SAMFileHeader outputHeader = ReadUtils.cloneSAMFileHeader(getHeaderForReads());
         outputWriter = new SAMFileGATKReadWriter(new SAMFileWriterFactory().makeWriter(outputHeader, true, OUTPUT, referenceArguments.getReferenceFile()));
         transform = new BQSRReadTransformer(outputHeader, BQSR_RECAL_FILE, bqsrArgs);
+        assertOnlyIlluminaReadGroups(getHeaderForReads());
+    }
+
+    private void assertOnlyIlluminaReadGroups(final SAMFileHeader readsHeader) {
+        if (readsHeader.getReadGroups().stream().anyMatch(rg -> NGSPlatform.fromReadGroupPL(rg.getPlatform()) !=  NGSPlatform.ILLUMINA)){
+            throw new UserException.BadInput("BQSR only supports ILLUMINA.");
+        }
     }
 
     @Override

@@ -83,6 +83,89 @@ public final class NestedIntegerArray<T extends Serializable> implements Seriali
     }
 
     /**
+     * Specialized version of get for 1 parameter.
+     * Varagrs have a large cost because the arg array is allocated everytime.
+     * Using a specialized method eliminates that performance problem.
+     */
+    @SuppressWarnings("unchecked")
+    public T get1(final int key0) {
+        Object[] myData = data;
+        return (T)myData[key0];
+    }
+
+    /**
+     * Specialized version of get for 2 parameters.
+     * Varagrs have a large cost because the arg array is allocated everytime.
+     * Using a specialized method eliminates that performance problem.
+     */
+    @SuppressWarnings("unchecked")
+    public T get2(final int key0, final int key1) {
+        if ( key0 >= dimensions[0] ) { return null; }
+
+        Object[] myData = data;
+        myData = (Object[])myData[key0];
+        if ( myData == null ) { return null; }
+
+        return (T)myData[key1];
+    }
+
+    /**
+     * Specialized version of get for 3 parameters.
+     * Varagrs have a large cost because the arg array is allocated everytime.
+     * Using a specialized method eliminates that performance problem.
+     */
+    @SuppressWarnings("unchecked")
+    public T get3(final int key0, final int key1, final int key2) {
+        if (key0 >= dimensions[0] || key1 >= dimensions[1]) {
+            return null;
+        }
+
+        Object[] myData = data;
+        myData = (Object[])myData[key0];
+        if ( myData == null ) {
+            return null;
+        }
+
+        myData = (Object[])myData[key1];
+        if ( myData == null ) {
+            return null;
+        }
+
+        return (T)myData[key2];
+    }
+
+    /**
+     * Specialized version of get for 4 parameters.
+     * Varagrs have a large cost because the arg array is allocated everytime.
+     * Using a specialized method eliminates that performance problem.
+     */
+    @SuppressWarnings("unchecked")
+    public T get4(final int key0, final int key1, final int key2, final int key3) {
+        if (key0 >= dimensions[0] || key1 >= dimensions[1] || key2 >= dimensions[2]) {
+            return null;
+        }
+
+        Object[] myData = data;
+        myData = (Object[])myData[key0];
+        if ( myData == null ) {
+            return null;
+        }
+
+        myData = (Object[])myData[key1];
+        if ( myData == null ) {
+            return null;
+        }
+
+        myData = (Object[])myData[key2];
+        if ( myData == null ) {
+            return null;
+        }
+
+        return (T)myData[key3];
+    }
+
+
+    /**
      * Insert a value at the position specified by the given keys.
      *
      * @param value value to insert

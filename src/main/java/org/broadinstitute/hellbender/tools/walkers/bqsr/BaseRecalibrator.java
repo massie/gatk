@@ -136,7 +136,7 @@ public final class BaseRecalibrator extends ReadWalker {
             recalArgs.DEFAULT_PLATFORM = recalArgs.FORCE_PLATFORM;
         }
 
-        assertNoSOLiDReadGroups(getHeaderForReads());
+        assertOnlyIlluminaReadGroups(getHeaderForReads());
 
         if ( knownSites.isEmpty() && ! recalArgs.RUN_WITHOUT_DBSNP ) { // Warn the user if no dbSNP file or other variant mask was specified
             throw new UserException.CommandLineException(NO_DBSNP_EXCEPTION);
@@ -147,11 +147,12 @@ public final class BaseRecalibrator extends ReadWalker {
         referenceDataSource = ReferenceDataSource.of(referenceArguments.getReferenceFile());
     }
 
-    private void assertNoSOLiDReadGroups(final SAMFileHeader readsHeader) {
-        if (readsHeader.getReadGroups().stream().anyMatch(rg -> NGSPlatform.fromReadGroupPL(rg.getPlatform()) ==  NGSPlatform.SOLID)){
-            throw new UserException.BadInput("BQSR does not support SOLiD data but found read group from SOLiD platform.");
+    private void assertOnlyIlluminaReadGroups(final SAMFileHeader readsHeader) {
+        if (readsHeader.getReadGroups().stream().anyMatch(rg -> NGSPlatform.fromReadGroupPL(rg.getPlatform()) !=  NGSPlatform.ILLUMINA)){
+            throw new UserException.BadInput("BQSR only supports ILLUMINA.");
         }
     }
+
 
     @Override
     public CountingReadFilter makeReadFilter() {
