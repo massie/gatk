@@ -6,6 +6,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.broadinstitute.hellbender.cmdline.Argument;
+import org.broadinstitute.hellbender.cmdline.ArgumentCollection;
 import org.broadinstitute.hellbender.cmdline.CommandLineProgramProperties;
 import org.broadinstitute.hellbender.cmdline.StandardArgumentDefinitions;
 import org.broadinstitute.hellbender.cmdline.programgroups.SparkProgramGroup;
@@ -32,15 +33,15 @@ import org.broadinstitute.hellbender.utils.variant.Variant;
 import java.io.IOException;
 import java.util.List;
 @CommandLineProgramProperties(
-        summary = "This tools performs 2 steps of BQSR - crection of recalibration tables and rewriting of the bam, without writing the tables to disk. ",
+        summary = "This tools performs 2 steps of BQSR - creation of recalibration tables and rewriting of the bam, without writing the tables to disk. ",
         oneLineSummary = "Both steps of BQSR",
-        usageExample = "BQSRSpark -I in.bam --BQSRKnownVariants in.vcf -O out.bam",
+        usageExample = "BQSRSpark -I in.bam --knownSites in.vcf -O out.bam",
         programGroup = SparkProgramGroup.class
 )
 /**
  * BQSR. The final result is analysis-ready reads.
  */
-public final class BQSRSpark extends GATKSparkTool {
+public final class BQSRSparkPipeline extends GATKSparkTool {
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -49,7 +50,7 @@ public final class BQSRSpark extends GATKSparkTool {
     @Override
     public boolean requiresReference() { return true; }
 
-    @Argument(doc = "the known variants", shortName = "BQSRKnownVariants", fullName = "baseRecalibrationKnownVariants", optional = true)
+    @Argument(doc = "the known variants", shortName = "knownSites", fullName = "knownSites", optional = true)
     protected List<String> baseRecalibrationKnownVariants;
 
     @Argument(doc = "the output bam", shortName = StandardArgumentDefinitions.OUTPUT_SHORT_NAME,
@@ -59,9 +60,21 @@ public final class BQSRSpark extends GATKSparkTool {
     @Argument(doc = "If specified, shard the output bam", shortName = "shardedOutput", fullName = "shardedOutput", optional = true)
     private boolean shardedOutput = false;
 
-    @Argument(doc = "the join strategy for reference bases", shortName = "joinStrategy", fullName = "joinStrategy", optional = true)
+    @Argument(doc = "the join strategy for reference bases and known variants", shortName = "joinStrategy", fullName = "joinStrategy", optional = true)
     private JoinStrategy joinStrategy = JoinStrategy.SHUFFLE;
-    
+
+    /**
+     * all the command line arguments for BQSR and its covariates
+     */
+    @ArgumentCollection(doc = "all the command line arguments for BQSR and its covariates")
+    private final RecalibrationArgumentCollection bqsrArgs = new RecalibrationArgumentCollection();
+
+    /**
+     * command-line arguments to fine tune the apply BQSR step.
+     */
+    @ArgumentCollection
+    public ApplyBQSRArgumentCollection applyBqsrArgs = new ApplyBQSRArgumentCollection();
+
     @Override
     public SerializableFunction<GATKRead, SimpleInterval> getReferenceWindowFunction() {
         return BaseRecalibrationEngine.BQSR_REFERENCE_WINDOW_FUNCTION;
@@ -69,8 +82,8 @@ public final class BQSRSpark extends GATKSparkTool {
 
     @Override
     protected void runTool(final JavaSparkContext ctx) {
-        JavaRDD<GATKRead> markedReads = getReads();
-        VariantsSparkSource variantsSparkSource = new VariantsSparkSource(ctx);
+        final JavaRDD<GATKRead> initialReads = getReads();
+        final VariantsSparkSource variantsSparkSource = new VariantsSparkSource(ctx);
 
         if ( baseRecalibrationKnownVariants.isEmpty() ) { // Warn the user if no dbSNP file or other variant mask was specified
             throw new UserException.CommandLineException(BaseRecalibrator.NO_DBSNP_EXCEPTION);
@@ -81,21 +94,18 @@ public final class BQSRSpark extends GATKSparkTool {
             throw new GATKException("Cannot currently handle more than one known sites file, " +
                                     "as getParallelVariants(List) is broken");
         }
-        JavaRDD<Variant> bqsrKnownVariants = variantsSparkSource.getParallelVariants(baseRecalibrationKnownVariants.get(0));
+        final JavaRDD<Variant> bqsrKnownVariants = variantsSparkSource.getParallelVariants(baseRecalibrationKnownVariants.get(0));
 
-        // TODO: Look into broadcasting the reference to all of the workers. This would make AddContextDataToReadSpark
-        // TODO: and ApplyBQSRStub simpler (#855).
-        JavaPairRDD<GATKRead, ReadContextData> rddReadContext = AddContextDataToReadSpark.add(markedReads, getReference(), bqsrKnownVariants, joinStrategy);
-        // TODO: broadcast the reads header?
+        final JavaPairRDD<GATKRead, ReadContextData> rddReadContext = AddContextDataToReadSpark.add(initialReads, getReference(), bqsrKnownVariants, joinStrategy);
 
         //note: we use the reference dictionary from the reads themselves.
-        final RecalibrationReport bqsrReport = BaseRecalibratorSparkFn.apply(rddReadContext, getHeaderForReads(), getHeaderForReads().getSequenceDictionary(), new RecalibrationArgumentCollection());
+        final RecalibrationReport bqsrReport = BaseRecalibratorSparkFn.apply(rddReadContext, getHeaderForReads(), getHeaderForReads().getSequenceDictionary(), bqsrArgs);
         final Broadcast<RecalibrationReport> reportBroadcast = ctx.broadcast(bqsrReport);
-        final JavaRDD<GATKRead> finalReads = ApplyBQSRSparkFn.apply(markedReads, reportBroadcast, getHeaderForReads(), new ApplyBQSRArgumentCollection());
+        final JavaRDD<GATKRead> finalReads = ApplyBQSRSparkFn.apply(initialReads, reportBroadcast, getHeaderForReads(), applyBqsrArgs);
 
         try {
             ReadsSparkSink.writeReads(ctx, output, finalReads, getHeaderForReads(), shardedOutput ? ReadsWriteFormat.SHARDED : ReadsWriteFormat.SINGLE);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new GATKException("unable to write bam: " + e);
         }
     }

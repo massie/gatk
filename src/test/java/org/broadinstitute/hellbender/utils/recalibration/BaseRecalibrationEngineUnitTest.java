@@ -5,8 +5,8 @@ import org.broadinstitute.hellbender.engine.ReferenceDataSource;
 import org.broadinstitute.hellbender.engine.ReferenceMemorySource;
 import org.broadinstitute.hellbender.utils.SimpleInterval;
 import org.broadinstitute.hellbender.utils.Utils;
-import org.broadinstitute.hellbender.utils.read.GATKRead;
 import org.broadinstitute.hellbender.utils.read.ArtificialReadUtils;
+import org.broadinstitute.hellbender.utils.read.GATKRead;
 import org.broadinstitute.hellbender.utils.reference.ReferenceBases;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -15,8 +15,6 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.broadinstitute.hellbender.utils.recalibration.BaseRecalibrationEngine.roundToNDecimalPlaces;
 
 public final class BaseRecalibrationEngineUnitTest {
 
@@ -146,31 +144,5 @@ public final class BaseRecalibrationEngineUnitTest {
         BaseRecalibrationEngine.calculateIsSNPOrIndel(read, refSource, isSNP, isInsertion, isDeletion);
         final int[] actual = (mode == EventType.BASE_INSERTION ? isInsertion : isDeletion);
         Assert.assertEquals(actual, expected, "calculateIsSNPOrIndel() failed with " + mode + " and cigar " + cigar + " Expected " + Arrays.toString(expected) + " but got " + Arrays.toString(actual));
-    }
-
-    @DataProvider(name = "rounding")
-    public Object[][] makeRounding() {
-        List<Object[]> tests = new ArrayList<>();
-        tests.add(new Object[]{3.1415926, 8, 3.1415926});
-        tests.add(new Object[]{3.1415926, 7, 3.1415926});
-        tests.add(new Object[]{3.1415926, 6, 3.141593});
-        tests.add(new Object[]{3.1415926, 5, 3.14159});
-        tests.add(new Object[]{3.1415926, 4, 3.1416});
-        tests.add(new Object[]{3.1415926, 3, 3.142});
-        tests.add(new Object[]{3.1415926, 2, 3.14});
-        tests.add(new Object[]{3.1415926, 1, 3.1});
-
-        tests.add(new Object[]{1.025, 2, 1.03});
-        return tests.toArray(new Object[][]{});
-    }
-
-    @Test(dataProvider = "rounding")
-    public void testRounding(final double in, final int n, final double out) {
-        Assert.assertEquals(roundToNDecimalPlaces(in, n), out);
-    }
-
-    @Test(expectedExceptions = IllegalArgumentException.class)
-    public void testRoundingError() {
-        roundToNDecimalPlaces(1.1234, -1);
     }
 }

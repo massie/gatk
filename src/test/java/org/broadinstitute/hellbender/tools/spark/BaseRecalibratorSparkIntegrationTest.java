@@ -68,7 +68,7 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
         final String hg19Ref = "EMWV_ZfLxrDY-wE";
         final String GRCh37Ref = ReferenceAPISource.URL_PREFIX + ReferenceAPISource.GRCH37_REF_ID;
         final String HiSeqBam_chr20 = localResources + "CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.bam";
-        final String dbSNPb37_chr2021 = largeFileTestDir + "/dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_chr2021 = largeFileTestDir + "dbsnp_138.b37.20.21.vcf";
         final String moreSites = getResourceDir() + "bqsr.fakeSitesForTesting.b37.chr17.vcf"; //for testing 2 input files (FIXME - this file is bogus because uses chr17)
 
         return new Object[][]{
@@ -105,7 +105,7 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
         final String GRCh37Ref_chr2021 = b37_reference_20_21;
         final String GRCh37Ref2bit_chr2021 = b37_2bit_reference_20_21;
         final String hiSeqBam_chr20 = getResourceDir() + "CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.bam";
-        final String dbSNPb37_chr2021 = largeFileTestDir + "/dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_chr2021 = largeFileTestDir + "dbsnp_138.b37.20.21.vcf";
 
         return new Object[][]{
                 // input local, computation local.
@@ -148,7 +148,7 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
     public void testPlottingWorkflow() throws IOException {
         final String resourceDir = getTestDataDir() + "/" + "BQSR" + "/";
         final String GRCh37Ref = ReferenceAPISource.GRCH37_REF_ID; // that's the "full" version
-        final String dbSNPb37_chr2021 = largeFileTestDir + "/dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_chr2021 = largeFileTestDir + "dbsnp_138.b37.20.21.vcf";
         final String HiSeqBam_chr20 = getResourceDir() + "CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.bam";
 
         //FIXME - this file is definitely not the right one
@@ -200,7 +200,7 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
         final String hg19Ref = ReferenceAPISource.URL_PREFIX + "EMWV_ZfLxrDY-wE";
         final String HiSeqBam_chr17 = resourceDir + "NA12878.chr17_69k_70k.dictFix.bam";
 
-        final String dbSNPb37_chr2021 = largeFileTestDir + "/dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_chr2021 = largeFileTestDir + "dbsnp_138.b37.20.21.vcf";
         final BQSRTest params = new BQSRTest(hg19Ref, HiSeqBam_chr17, dbSNPb37_chr2021, "", localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt");
         IntegrationTestSpec spec = new IntegrationTestSpec(
                 params.getCommandLine(),

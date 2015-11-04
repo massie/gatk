@@ -219,7 +219,7 @@ public final class RecalibrationReport {
         // the estimatedQreported column only exists in the ReadGroup table
         final double estimatedQReported = hasEstimatedQReportedColumn ?
                 (Double) reportTable.get(row, RecalUtils.ESTIMATED_Q_REPORTED_COLUMN_NAME) : // we get it if we are in the read group table
-                decodeByte((String) reportTable.get(row, RecalUtils.QUALITY_SCORE_COLUMN_NAME)); // or we use the reported quality if we are in any other table
+                decodeByte(reportTable.get(row, RecalUtils.QUALITY_SCORE_COLUMN_NAME)); // or we use the reported quality if we are in any other table
 
         final RecalDatum datum = new RecalDatum(nObservations, nErrors, (byte)1);
         datum.setEstimatedQReported(estimatedQReported);
@@ -332,14 +332,23 @@ public final class RecalibrationReport {
     }
 
     private byte decodeByte(final Object value) {
+        if (!(value instanceof Byte || value instanceof String)){
+            throw new IllegalArgumentException("expected a Byte or a String but got " + value);
+        }
         return value instanceof Byte ? (Byte)value: Byte.parseByte((String)value);
     }
 
     private int decodeInteger(final Object value) {
+        if (!(value instanceof Integer || value instanceof String)){
+            throw new IllegalArgumentException("expected a Integer or a String but got " + value);
+        }
         return value instanceof Integer ? (Integer) value: Integer.parseInt((String)value);
     }
 
     private boolean decodeBoolean(final Object value) {
+        if (!(value instanceof Boolean || value instanceof String)){
+            throw new IllegalArgumentException("expected a Boolean or a String but got " + value);
+        }
         return value instanceof Boolean ? (Boolean) value: Boolean.parseBoolean((String) value);
     }
 

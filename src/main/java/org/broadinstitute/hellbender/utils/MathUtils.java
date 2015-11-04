@@ -722,4 +722,19 @@ public final class MathUtils {
         return ds;
     }
 
+
+    /**
+     * Rounds the double to the given number of decimal places.
+     * For example, rounding 3.1415926 to 3 places would give 3.142.
+     */
+    public static double roundToNDecimalPlaces(final double in, final int n) {
+        if (n < 1) {
+            throw new IllegalArgumentException("cannot round to " + n + " decimal places");
+        }
+
+        //Note: this code is tricky. We want to match what writing the recalibration tables down to a file would do.
+        //The killer case is 1.025 rounded to 2 places. It needs to be 1.03
+        final double multiplier = Math.pow(10, n);
+        return (Math.round(in * 10. * multiplier)+5)/ 10 / multiplier;
+    }
 }

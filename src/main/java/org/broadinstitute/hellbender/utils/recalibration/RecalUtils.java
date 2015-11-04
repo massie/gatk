@@ -305,6 +305,19 @@ public final class RecalUtils {
     }
 
     /**
+     * Creates a consolidated RecalibrationReport report from the tables.
+     *
+     * @param argumentTable Argument table
+     * @param quantizationTable Quantization Table
+     * @param recalTables Other recal tables
+     * @return RecalibrationReport report
+     */
+    public static RecalibrationReport createRecalibrationReport(final GATKReportTable argumentTable, final GATKReportTable quantizationTable, final List<GATKReportTable> recalTables) {
+        final GATKReport report = RecalUtils.createRecalibrationGATKReport(argumentTable, quantizationTable, recalTables);
+        return new RecalibrationReport(report);
+    }
+
+    /**
      * Creates a consolidated GATK report, first generating report tables. Report can then be written to a stream via GATKReport.print(PrintStream).
      *
      * @param argumentTable Argument table

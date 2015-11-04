@@ -13,7 +13,6 @@ import org.broadinstitute.hellbender.utils.read.GATKRead;
 import org.broadinstitute.hellbender.utils.recalibration.*;
 import org.broadinstitute.hellbender.utils.recalibration.covariates.StandardCovariateList;
 import org.broadinstitute.hellbender.utils.reference.ReferenceBases;
-import org.broadinstitute.hellbender.utils.report.GATKReport;
 import org.broadinstitute.hellbender.utils.variant.Variant;
 import scala.Tuple2;
 
@@ -53,10 +52,7 @@ public final class BaseRecalibratorSparkFn {
         final QuantizationInfo quantizationInfo = new QuantizationInfo(combinedTables, recalArgs.QUANTIZING_LEVELS);
 
         final StandardCovariateList covariates = new StandardCovariateList(recalArgs, header);
-        final RecalibrationArgumentCollection RAC = recalArgs;
         final boolean sortByCols = recalArgs.SORT_BY_ALL_COLUMNS;
-        final RecalibrationTables recalibrationTables = combinedTables;
-        final GATKReport report = RecalUtils.createRecalibrationGATKReport(RAC.generateReportTable(covariates.covariateNames()), quantizationInfo.generateReportTable(sortByCols), RecalUtils.generateReportTables(recalibrationTables, covariates, sortByCols));
-        return new RecalibrationReport(report);
+        return RecalUtils.createRecalibrationReport(recalArgs.generateReportTable(covariates.covariateNames()), quantizationInfo.generateReportTable(sortByCols), RecalUtils.generateReportTables(combinedTables, covariates, sortByCols));
     }
 }

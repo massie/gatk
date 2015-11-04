@@ -6,6 +6,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.broadinstitute.hellbender.cmdline.Argument;
+import org.broadinstitute.hellbender.cmdline.ArgumentCollection;
 import org.broadinstitute.hellbender.cmdline.CommandLineProgramProperties;
 import org.broadinstitute.hellbender.cmdline.StandardArgumentDefinitions;
 import org.broadinstitute.hellbender.cmdline.programgroups.SparkProgramGroup;
@@ -36,7 +37,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         summary = "Takes aligned reads (likely from BWA) and runs MarkDuplicates and BQSR. The final result is analysis-ready reads.",
         oneLineSummary = "Takes aligned reads (likely from BWA) and runs MarkDuplicates and BQSR. The final result is analysis-ready reads.",
-        usageExample = "Hellbender ReadsPipelineSpark -I single.bam -R referenceURL -BQSRKnownVariants variants.vcf -O file:///tmp/output.bam",
+        usageExample = "Hellbender ReadsPipelineSpark -I single.bam -R referenceURL -knownSites variants.vcf -O file:///tmp/output.bam",
         programGroup = SparkProgramGroup.class
 )
 
@@ -53,7 +54,7 @@ public class ReadsPipelineSpark extends GATKSparkTool {
     @Override
     public boolean requiresReference() { return true; }
 
-    @Argument(doc = "the known variants", shortName = "BQSRKnownVariants", fullName = "baseRecalibrationKnownVariants", optional = true)
+    @Argument(doc = "the known variants", shortName = "knownSites", fullName = "knownSites", optional = true)
     protected List<String> baseRecalibrationKnownVariants;
 
     @Argument(doc = "the output bam", shortName = StandardArgumentDefinitions.OUTPUT_SHORT_NAME,
@@ -63,9 +64,22 @@ public class ReadsPipelineSpark extends GATKSparkTool {
     @Argument(doc = "If specified, shard the output bam", shortName = "shardedOutput", fullName = "shardedOutput", optional = true)
     private boolean shardedOutput = false;
 
-    @Argument(doc = "the join strategy for reference bases", shortName = "joinStrategy", fullName = "joinStrategy", optional = true)
+    @Argument(doc = "the join strategy for reference bases and known variants", shortName = "joinStrategy", fullName = "joinStrategy", optional = true)
     private JoinStrategy joinStrategy = JoinStrategy.SHUFFLE;
-    
+
+    /**
+     * all the command line arguments for BQSR and its covariates
+     */
+    @ArgumentCollection(doc = "all the command line arguments for BQSR and its covariates")
+    private final RecalibrationArgumentCollection bqsrArgs = new RecalibrationArgumentCollection();
+
+    /**
+     * command-line arguments to fine tune the apply BQSR step.
+     */
+    @ArgumentCollection
+    public ApplyBQSRArgumentCollection applyBqsrArgs = new ApplyBQSRArgumentCollection();
+
+
     @Override
     public SerializableFunction<GATKRead, SimpleInterval> getReferenceWindowFunction() {
         return BaseRecalibrationEngine.BQSR_REFERENCE_WINDOW_FUNCTION;
@@ -89,9 +103,9 @@ public class ReadsPipelineSpark extends GATKSparkTool {
         // TODO: and ApplyBQSRStub simpler (#855).
         JavaPairRDD<GATKRead, ReadContextData> rddReadContext = AddContextDataToReadSpark.add(markedReads, getReference(), bqsrKnownVariants, joinStrategy);
         // TODO: broadcast the reads header?
-        final RecalibrationReport bqsrReport = BaseRecalibratorSparkFn.apply(rddReadContext, getHeaderForReads(), getReferenceSequenceDictionary(), new RecalibrationArgumentCollection());
+        final RecalibrationReport bqsrReport = BaseRecalibratorSparkFn.apply(rddReadContext, getHeaderForReads(), getReferenceSequenceDictionary(), bqsrArgs);
         final Broadcast<RecalibrationReport> reportBroadcast = ctx.broadcast(bqsrReport);
-        final JavaRDD<GATKRead> finalReads = ApplyBQSRSparkFn.apply(markedReads, reportBroadcast, getHeaderForReads(), new ApplyBQSRArgumentCollection());
+        final JavaRDD<GATKRead> finalReads = ApplyBQSRSparkFn.apply(markedReads, reportBroadcast, getHeaderForReads(), applyBqsrArgs);
 
         try {
             ReadsSparkSink.writeReads(ctx, output, finalReads, getHeaderForReads(), shardedOutput ? ReadsWriteFormat.SHARDED : ReadsWriteFormat.SINGLE);

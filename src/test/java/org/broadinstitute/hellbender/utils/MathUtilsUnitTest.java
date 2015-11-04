@@ -7,20 +7,24 @@ import org.apache.logging.log4j.Logger;
 import org.broadinstitute.hellbender.utils.test.BaseTest;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import static org.broadinstitute.hellbender.utils.MathUtils.log10ToLog;
 import static org.broadinstitute.hellbender.utils.MathUtils.logToLog10;
+import static org.broadinstitute.hellbender.utils.MathUtils.roundToNDecimalPlaces;
 
 /**
  * Basic unit test for MathUtils
  */
-public final class MathUtilsUnitTests extends BaseTest {
+public final class MathUtilsUnitTest extends BaseTest {
 
-    private final static Logger logger = LogManager.getLogger(MathUtilsUnitTests.class);
+    private static final Logger logger = LogManager.getLogger(MathUtilsUnitTest.class);
 
     @BeforeClass
     public void init() {
@@ -313,5 +317,32 @@ public final class MathUtilsUnitTests extends BaseTest {
             Assert.assertEquals(logToLog10(log10ToLog(log10X)), log10X, error, "log10->log->log10");
             Assert.assertEquals(log10ToLog(logToLog10(logX)), logX, error, "log->log10->log");
         }
+    }
+
+
+    @DataProvider(name = "rounding")
+    public Object[][] makeRounding() {
+        List<Object[]> tests = new ArrayList<>();
+        tests.add(new Object[]{3.1415926, 8, 3.1415926});
+        tests.add(new Object[]{3.1415926, 7, 3.1415926});
+        tests.add(new Object[]{3.1415926, 6, 3.141593});
+        tests.add(new Object[]{3.1415926, 5, 3.14159});
+        tests.add(new Object[]{3.1415926, 4, 3.1416});
+        tests.add(new Object[]{3.1415926, 3, 3.142});
+        tests.add(new Object[]{3.1415926, 2, 3.14});
+        tests.add(new Object[]{3.1415926, 1, 3.1});
+
+        tests.add(new Object[]{1.025, 2, 1.03});
+        return tests.toArray(new Object[][]{});
+    }
+
+    @Test(dataProvider = "rounding")
+    public void testRounding(final double in, final int n, final double out) {
+        Assert.assertEquals(roundToNDecimalPlaces(in, n), out);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testRoundingError() {
+        roundToNDecimalPlaces(1.1234, -1);
     }
 }

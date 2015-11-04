@@ -1,7 +1,6 @@
 package org.broadinstitute.hellbender.utils.recalibration;
 
 import com.google.cloud.dataflow.sdk.transforms.SerializableFunction;
-import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.util.Locatable;
@@ -26,6 +25,8 @@ import org.broadinstitute.hellbender.utils.recalibration.covariates.StandardCova
 
 import java.io.Serializable;
 import java.util.Arrays;
+
+import static org.broadinstitute.hellbender.utils.MathUtils.roundToNDecimalPlaces;
 
 public final class BaseRecalibrationEngine implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -177,22 +178,6 @@ public final class BaseRecalibrationEngine implements Serializable {
                 leaf.value.setEstimatedQReported(roundToNDecimalPlaces(leaf.value.getEstimatedQReported(), RecalUtils.EMPIRICAL_Q_REPORTED_DECIMAL_PLACES));
             }
         }
-    }
-
-    /**
-     * Rounds the double to the given number of decimal places.
-     * For example, rounding 3.1415926 to 3 places would give 3.142.
-     * Not put into MathUtils because it uses the horrible path of going through a formatted String (to match String.format)
-     */
-    @VisibleForTesting
-    static double roundToNDecimalPlaces(final double in, final int n) {
-        if (n < 1) {
-            throw new IllegalArgumentException("cannot round to " + n + " decimal places");
-        }
-
-        //Note: this code is very ugly because it goes through parsing and unparsing.
-        //The reason is that we want to match what writing the recalibration tables down to a file would do.
-        return Double.valueOf(String.format("%." + n + "f", in));
     }
 
     /**
