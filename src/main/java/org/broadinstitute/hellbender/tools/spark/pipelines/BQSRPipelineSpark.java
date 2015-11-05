@@ -41,7 +41,7 @@ import java.util.List;
 /**
  * BQSR. The final result is analysis-ready reads.
  */
-public final class BQSRSparkPipeline extends GATKSparkTool {
+public final class BQSRPipelineSpark extends GATKSparkTool {
     private static final long serialVersionUID = 1L;
 
     @Override

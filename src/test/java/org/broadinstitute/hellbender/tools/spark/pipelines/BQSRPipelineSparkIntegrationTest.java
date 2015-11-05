@@ -9,7 +9,7 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class BQSRSparkPipelineIntegrationTest extends CommandLineProgramTest {
+public class BQSRPipelineSparkIntegrationTest extends CommandLineProgramTest {
     private static final class BQSRTest {
         final String referenceURL;
         final String bam;

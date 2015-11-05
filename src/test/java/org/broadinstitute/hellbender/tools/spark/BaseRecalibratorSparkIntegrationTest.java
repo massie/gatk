@@ -75,7 +75,7 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
                 // local computation and files (except for the reference)
                 {new BQSRTest(GRCh37Ref, HiSeqBam_chr20, dbSNPb37_chr2021, "", localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt")},
 
-                // Currently disabled because BaseRecalibratorSpark can't handle more than 1 knownSites file.
+                // Currently disabled because BaseRecalibratorSpark can't handle more than 1 knownSites file: https://github.com/broadinstitute/gatk/issues/1085
                 // Re-enable once this is fixed.
                 //{new BQSRTest(GRCh37Ref, HiSeqBam_chr20, dbSNPb37, "-knownSites " + moreSites, localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.2inputs.recal.txt")},
 
@@ -92,7 +92,7 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
         final String GRCh37Ref = ReferenceAPISource.URL_PREFIX + ReferenceAPISource.GRCH37_REF_ID;
         final String localResources =  getResourceDir();
         final String HiSeqBamCloud_chr20 = getCloudInputs() + "CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.bam";
-        final String dbSNPb37_chr2010 = largeFileTestDir + "/dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_chr2010 = largeFileTestDir + "dbsnp_138.b37.20.21.vcf";
 
         return new Object[][]{
                 // input in cloud, computation local.

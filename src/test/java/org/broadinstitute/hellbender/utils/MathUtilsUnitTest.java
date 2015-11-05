@@ -15,9 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import static org.broadinstitute.hellbender.utils.MathUtils.log10ToLog;
-import static org.broadinstitute.hellbender.utils.MathUtils.logToLog10;
-import static org.broadinstitute.hellbender.utils.MathUtils.roundToNDecimalPlaces;
+import static org.broadinstitute.hellbender.utils.MathUtils.*;
 
 /**
  * Basic unit test for MathUtils
@@ -333,6 +331,8 @@ public final class MathUtilsUnitTest extends BaseTest {
         tests.add(new Object[]{3.1415926, 1, 3.1});
 
         tests.add(new Object[]{1.025, 2, 1.03});
+        tests.add(new Object[]{34.356845398701736,  4, 34.3568});
+        tests.add(new Object[]{0.43452380952380953, 2, 0.43});
         return tests.toArray(new Object[][]{});
     }
 
