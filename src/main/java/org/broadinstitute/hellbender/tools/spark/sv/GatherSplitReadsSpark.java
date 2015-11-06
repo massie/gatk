@@ -2,6 +2,7 @@ package org.broadinstitute.hellbender.tools.spark.sv;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMSequenceDictionary;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.broadinstitute.hellbender.cmdline.Argument;
@@ -72,39 +73,121 @@ public class GatherSplitReadsSpark extends GATKSparkTool
         private final String name;
     }
 
-    @Override
-    protected void runTool( final JavaSparkContext ctx )
+    private static final class SplitReadClusterer implements Iterator<GATKRead>, Iterable<GATKRead>
     {
-        final JavaRDD<GATKRead> clusteredSplitReads = getReads().flatMap( read ->
+        public SplitReadClusterer( Iterator<GATKRead> someIterator, SAMSequenceDictionary dictionary )
         {
-            if ( !read.failsVendorQualityCheck() && !read.isUnmapped() && read.getMappingQuality() > 0 )
+            this.inputIterator = someIterator;
+            this.dictionary = dictionary;
+        }
+
+        @Override
+        public boolean hasNext()
+        {
+            while ( !outputIterator.hasNext() )
             {
+                if ( !inputIterator.hasNext() )
+                    return false;
+                outputIterator = processRead(inputIterator.next());
+            }
+            return true;
+        }
+
+        @Override
+        public GATKRead next()
+        {
+            if ( !hasNext() )
+                throw new NoSuchElementException("Iterator<GATKRead> is exhausted.");
+            return outputIterator.next();
+        }
+
+        @Override
+        public Iterator<GATKRead> iterator() { return this; }
+
+        private Iterator<GATKRead> processRead( GATKRead read )
+        {
+            if (!read.failsVendorQualityCheck() && !read.isUnmapped() && read.getMappingQuality() > 0) {
                 final List<CigarElement> cigarElements = read.getCigar().getCigarElements();
                 final ListIterator<CigarElement> itr0 = cigarElements.listIterator();
-                if ( itr0.hasNext() )
-                {
+                if (itr0.hasNext()) {
                     CigarElement firstEle = itr0.next();
-                    if ( firstEle.getOperator() == CigarOperator.HARD_CLIP && itr0.hasNext() )
+                    if (firstEle.getOperator() == CigarOperator.HARD_CLIP && itr0.hasNext())
                         firstEle = itr0.next();
-                    if ( firstEle.getOperator() == CigarOperator.SOFT_CLIP &&
+                    if (firstEle.getOperator() == CigarOperator.SOFT_CLIP &&
                             firstEle.getLength() >= MIN_SOFT_CLIP_LEN &&
-                            highQualityRegion(read.getBaseQualities(), 0) )
+                            highQualityRegion(read.getBaseQualities(), 0))
                         return cluster(read, read.getStart()); // NON-STRUCTURED return
                 }
                 final ListIterator<CigarElement> itrN = cigarElements.listIterator(cigarElements.size());
-                if ( itrN.hasPrevious() )
-                {
+                if (itrN.hasPrevious()) {
                     CigarElement lastEle = itrN.previous();
-                    if ( lastEle.getOperator() == CigarOperator.HARD_CLIP && itrN.hasPrevious() )
+                    if (lastEle.getOperator() == CigarOperator.HARD_CLIP && itrN.hasPrevious())
                         lastEle = itrN.previous();
-                    if ( lastEle.getOperator() == CigarOperator.SOFT_CLIP &&
+                    if (lastEle.getOperator() == CigarOperator.SOFT_CLIP &&
                             lastEle.getLength() >= MIN_SOFT_CLIP_LEN &&
-                            highQualityRegion(read.getBaseQualities(),read.getLength()-lastEle.getLength()) )
+                            highQualityRegion(read.getBaseQualities(), read.getLength() - lastEle.getLength()))
                         return cluster(read, read.getEnd()); // NON-STRUCTURED return
                 }
             }
-            return Collections.emptyList();
-        } );
+            return Collections.emptyIterator();
+        }
+
+        private Iterator<GATKRead> cluster( final GATKRead read, final int locus )
+        {
+            final int contigIdx = dictionary.getSequenceIndex(read.getContig());
+            final EventEvidence newEvidence = new EventEvidence(contigIdx,locus,read.getName());
+            locMap.put(newEvidence,read);
+
+            // clean out old stuff that can't possibly be interesting anymore
+            final Iterator<Map.Entry<EventEvidence,GATKRead>> itr = locMap.entrySet().iterator();
+            while ( itr.hasNext() )
+            {
+                final EventEvidence oldEvidence = itr.next().getKey();
+                if ( oldEvidence.getContigIdx() == newEvidence.getContigIdx() &&
+                        oldEvidence.getLocus() + MAX_LOCUS_DIST > newEvidence.getLocus() )
+                    break;
+                itr.remove();
+            }
+
+            // find all the evidence in a window surrounding the locus of the new evidence
+            final SortedMap<EventEvidence,GATKRead> windowMap = locMap
+                    .tailMap(new EventEvidence(newEvidence.getContigIdx(), newEvidence.getLocus() - CLUSTER_WINDOW))
+                    .headMap(new EventEvidence(newEvidence.getContigIdx(), newEvidence.getLocus() + CLUSTER_WINDOW + 1));
+            if ( windowMap.size() >= MIN_EVIDENCE )
+            {
+                final List<GATKRead> list = new LinkedList<>();
+                for ( Map.Entry<EventEvidence, GATKRead> entry : windowMap.entrySet() )
+                {
+                    if (entry.getValue() != null)
+                    {
+                        list.add(entry.getValue());
+                        entry.setValue(null);
+                    }
+                }
+                return list.iterator(); // NON-STRUCTURED return
+            }
+            return Collections.emptyIterator();
+        }
+
+        private static boolean highQualityRegion( final byte[] quals, int idx )
+        {
+            for ( final int end = idx+MIN_SOFT_CLIP_LEN; idx != end; ++idx )
+                if ( quals[idx] < MIN_QUALITY )
+                    return false; // NON-STRUCTURED return
+            return true;
+        }
+
+        private final Iterator<GATKRead> inputIterator;
+        private final SAMSequenceDictionary dictionary;
+        private final SortedMap<EventEvidence,GATKRead> locMap = new TreeMap<>();
+        private Iterator<GATKRead> outputIterator = Collections.emptyIterator();
+    }
+
+    @Override
+    protected void runTool( final JavaSparkContext ctx )
+    {
+        final JavaRDD<GATKRead> clusteredSplitReads = getReads().mapPartitions(
+                readItr -> { return new SplitReadClusterer(readItr,getHeaderForReads().getSequenceDictionary()); } );
 
         try
         {
@@ -114,52 +197,5 @@ public class GatherSplitReadsSpark extends GATKSparkTool
         {
             throw new GATKException("unable to write bam: " + e);
         }
-
     }
-
-    private List<GATKRead> cluster( final GATKRead read, final int locus )
-    {
-        final int contigIdx = getHeaderForReads().getSequenceDictionary().getSequenceIndex(read.getContig());
-        final EventEvidence newEvidence = new EventEvidence(contigIdx,locus,read.getName());
-        locMap.put(newEvidence,read);
-
-        // clean out old stuff that can't possibly be interesting anymore
-        final Iterator<Map.Entry<EventEvidence,GATKRead>> itr = locMap.entrySet().iterator();
-        while ( itr.hasNext() )
-        {
-            final EventEvidence oldEvidence = itr.next().getKey();
-            if ( oldEvidence.getContigIdx() != newEvidence.getContigIdx() ||
-                    oldEvidence.getLocus() + MAX_LOCUS_DIST <= newEvidence.getLocus() )
-                itr.remove();
-        }
-
-        // find all the evidence in a window surrounding the locus of the new evidence
-        final SortedMap<EventEvidence,GATKRead> windowMap = locMap
-                .tailMap(new EventEvidence(newEvidence.getContigIdx(), newEvidence.getLocus() - CLUSTER_WINDOW))
-                .headMap(new EventEvidence(newEvidence.getContigIdx(), newEvidence.getLocus() + CLUSTER_WINDOW + 1));
-        if ( windowMap.size() >= MIN_EVIDENCE )
-        {
-            final List<GATKRead> result = new LinkedList<>();
-            for ( Map.Entry<EventEvidence, GATKRead> entry : windowMap.entrySet() )
-            {
-                if (entry.getValue() != null)
-                {
-                    result.add(entry.getValue());
-                    entry.setValue(null);
-                }
-            }
-            return result; // NON-STRUCTURED return
-        }
-        return Collections.emptyList();
-    }
-
-    private static boolean highQualityRegion( final byte[] quals, int idx )
-    {
-        for ( final int end = idx+MIN_SOFT_CLIP_LEN; idx != end; ++idx )
-            if ( quals[idx] < MIN_QUALITY )
-                return false; // NON-STRUCTURED return
-        return true;
-    }
-
-    private final SortedMap<EventEvidence,GATKRead> locMap = new TreeMap<>();
 }
