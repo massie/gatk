@@ -59,7 +59,7 @@ public final class BaseRecalibratorIntegrationTest extends CommandLineProgramTes
         final String HiSeqBam_chr17 = getResourceDir() + "NA12878.chr17_69k_70k.dictFix.bam";
         final String trickyBam_chr20 = getResourceDir() + "CEUTrio.HiSeq.WGS.b37.ch20.4379150-4379157.bam";
         final String dbSNPb37_chr17 =  getResourceDir() + "dbsnp_132.b37.excluding_sites_after_129.chr17_69k_70k.vcf";
-        final String dbSNPb37_chr2021 = largeFileTestDir + "/dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_chr20 = getResourceDir() + "dbsnp_138.b37.excluding_sites_after_129.ch20.1m-1m1k.vcf";
         final String origQualsBam_chr1 = getResourceDir() + "originalQuals.1kg.chr1.1-1K.1RG.dictFix.bam";
         final String dbSNPb36_chr1 = getResourceDir() + "dbsnp_132.b36.excluding_sites_after_129.chr1_1k.vcf";
         final String GRCh37Ref_chr2021 = "src/test/resources/large/human_g1k_v37.20.21.fasta";
@@ -67,8 +67,12 @@ public final class BaseRecalibratorIntegrationTest extends CommandLineProgramTes
         final String moreSites = getResourceDir() + "bqsr.fakeSitesForTesting.b37.chr17.vcf"; //for testing 2 input files
 
         return new Object[][]{
-                //recal tables created using gatk3
-                {new BQSRTest(GRCh37Ref_chr2021, hiSeqBam_chr20, dbSNPb37_chr2021, "--sort_by_all_columns", getResourceDir() + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt")},
+                //recal tables created using Gatk3 with one change from 2.87 to 2.88 in expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt
+                // The reason is that GATK4 uses a multiplier in summing doubles in RecalDatum.
+                // See MathUtilsUniTest.testAddDoubles for a demonstration how that can change the results.
+                // See RecalDatum for explanation of why the multiplier is needed.
+
+                {new BQSRTest(GRCh37Ref_chr2021, hiSeqBam_chr20, dbSNPb37_chr20, "--sort_by_all_columns", getResourceDir() + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt")},
                 {new BQSRTest(hg18Reference, HiSeqBam_chr17, dbSNPb37_chr17, "", getResourceDir() + "expected.NA12878.chr17_69k_70k.txt")},
                 {new BQSRTest(GRCh37Ref_chr2021, trickyBam_chr20, dbSNPb37_chr17, "", getResourceDir() + "expected.CEUTrio.HiSeq.WGS.b37.ch20.4379150-4379157.recal.txt")},
                 {new BQSRTest(hg18Reference, HiSeqBam_chr17, dbSNPb37_chr17, "-knownSites " + moreSites, getResourceDir() + "expected.NA12878.chr17_69k_70k.2inputs.txt")},

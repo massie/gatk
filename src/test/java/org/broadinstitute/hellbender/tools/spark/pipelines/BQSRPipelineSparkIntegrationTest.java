@@ -53,7 +53,7 @@ public class BQSRPipelineSparkIntegrationTest extends CommandLineProgramTest {
         final String GRCh37Ref_2021 = b37_reference_20_21;
         final String GRCh37Ref2bit_chr2021 = b37_2bit_reference_20_21;
         final String hiSeqBam_chr20 = getResourceDir() + "CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.bam";
-        final String dbSNPb37_2021 = largeFileTestDir + "/dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_2021 = getResourceDir() + "dbsnp_138.b37.excluding_sites_after_129.ch20.1m-1m1k.vcf";
 
         return new Object[][]{
                 // input local, computation local.

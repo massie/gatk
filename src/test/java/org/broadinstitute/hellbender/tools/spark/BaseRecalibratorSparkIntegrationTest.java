@@ -68,7 +68,7 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
         final String hg19Ref = "EMWV_ZfLxrDY-wE";
         final String GRCh37Ref = ReferenceAPISource.URL_PREFIX + ReferenceAPISource.GRCH37_REF_ID;
         final String HiSeqBam_chr20 = localResources + "CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.bam";
-        final String dbSNPb37_chr2021 = largeFileTestDir + "dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_chr2021 = localResources + "dbsnp_138.b37.excluding_sites_after_129.ch20.1m-1m1k.vcf";
         final String moreSites = getResourceDir() + "bqsr.fakeSitesForTesting.b37.chr17.vcf"; //for testing 2 input files (FIXME - this file is bogus because uses chr17)
 
         return new Object[][]{
@@ -79,10 +79,10 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
                 // Re-enable once this is fixed.
                 //{new BQSRTest(GRCh37Ref, HiSeqBam_chr20, dbSNPb37, "-knownSites " + moreSites, localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.2inputs.recal.txt")},
 
-                {new BQSRTest(GRCh37Ref, HiSeqBam_chr20, dbSNPb37_chr2021, "--indels_context_size 4",  localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.indels_context_size_4.recal.txt")},
-                {new BQSRTest(GRCh37Ref, HiSeqBam_chr20, dbSNPb37_chr2021, "--low_quality_tail 5",     localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.low_quality_tail_5.recal.txt")},
-                {new BQSRTest(GRCh37Ref, HiSeqBam_chr20, dbSNPb37_chr2021, "--quantizing_levels 6",    localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.quantizing_levels_6.recal.txt")},
-                {new BQSRTest(GRCh37Ref, HiSeqBam_chr20, dbSNPb37_chr2021, "--mismatches_context_size 4", localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.mismatches_context_size_4.recal.txt")},
+                {new BQSRTest(GRCh37Ref, HiSeqBam_chr20, HiSeqBam_chr20, "--indels_context_size 4",  localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.indels_context_size_4.recal.txt")},
+                {new BQSRTest(GRCh37Ref, HiSeqBam_chr20, HiSeqBam_chr20, "--low_quality_tail 5",     localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.low_quality_tail_5.recal.txt")},
+                {new BQSRTest(GRCh37Ref, HiSeqBam_chr20, HiSeqBam_chr20, "--quantizing_levels 6",    localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.quantizing_levels_6.recal.txt")},
+                {new BQSRTest(GRCh37Ref, HiSeqBam_chr20, HiSeqBam_chr20, "--mismatches_context_size 4", localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.mismatches_context_size_4.recal.txt")},
                 //// //{new BQSRTest(b36Reference, origQualsBam, dbSNPb36, "-OQ", getResourceDir() + "expected.originalQuals.1kg.chr1.1-1K.1RG.dictFix.OQ.txt")},
         };
     }
@@ -92,11 +92,11 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
         final String GRCh37Ref = ReferenceAPISource.URL_PREFIX + ReferenceAPISource.GRCH37_REF_ID;
         final String localResources =  getResourceDir();
         final String HiSeqBamCloud_chr20 = getCloudInputs() + "CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.bam";
-        final String dbSNPb37_chr2010 = largeFileTestDir + "dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_chr20 = localResources + "dbsnp_138.b37.excluding_sites_after_129.ch20.1m-1m1k.vcf";
 
         return new Object[][]{
                 // input in cloud, computation local.
-                {new BQSRTest(GRCh37Ref, HiSeqBamCloud_chr20, dbSNPb37_chr2010, "", localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt")},
+                {new BQSRTest(GRCh37Ref, HiSeqBamCloud_chr20, dbSNPb37_chr20, "", localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt")},
         };
     }
 
@@ -105,12 +105,12 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
         final String GRCh37Ref_chr2021 = b37_reference_20_21;
         final String GRCh37Ref2bit_chr2021 = b37_2bit_reference_20_21;
         final String hiSeqBam_chr20 = getResourceDir() + "CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.bam";
-        final String dbSNPb37_chr2021 = largeFileTestDir + "dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_chr20 = getResourceDir() + "dbsnp_138.b37.excluding_sites_after_129.ch20.1m-1m1k.vcf";
 
         return new Object[][]{
                 // input local, computation local.
-                {new BQSRTest(GRCh37Ref2bit_chr2021, hiSeqBam_chr20, dbSNPb37_chr2021, "--joinStrategy BROADCAST", getResourceDir() + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt")},
-                {new BQSRTest(GRCh37Ref_chr2021, hiSeqBam_chr20, dbSNPb37_chr2021, "--joinStrategy SHUFFLE", getResourceDir() + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt")},
+                {new BQSRTest(GRCh37Ref2bit_chr2021, hiSeqBam_chr20, dbSNPb37_chr20, "--joinStrategy BROADCAST", getResourceDir() + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt")},
+                {new BQSRTest(GRCh37Ref_chr2021, hiSeqBam_chr20, dbSNPb37_chr20, "--joinStrategy SHUFFLE", getResourceDir() + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt")},
         };
     }
 
@@ -148,7 +148,7 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
     public void testPlottingWorkflow() throws IOException {
         final String resourceDir = getTestDataDir() + "/" + "BQSR" + "/";
         final String GRCh37Ref = ReferenceAPISource.GRCH37_REF_ID; // that's the "full" version
-        final String dbSNPb37_chr2021 = largeFileTestDir + "dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_chr2021 = resourceDir + "dbsnp_138.b37.excluding_sites_after_129.ch20.1m-1m1k.vcf";
         final String HiSeqBam_chr20 = getResourceDir() + "CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.bam";
 
         //FIXME - this file is definitely not the right one
@@ -200,7 +200,7 @@ public class BaseRecalibratorSparkIntegrationTest extends CommandLineProgramTest
         final String hg19Ref = ReferenceAPISource.URL_PREFIX + "EMWV_ZfLxrDY-wE";
         final String HiSeqBam_chr17 = resourceDir + "NA12878.chr17_69k_70k.dictFix.bam";
 
-        final String dbSNPb37_chr2021 = largeFileTestDir + "dbsnp_138.b37.20.21.vcf";
+        final String dbSNPb37_chr2021 = resourceDir + "dbsnp_138.b37.excluding_sites_after_129.ch20.1m-1m1k.vcf";
         final BQSRTest params = new BQSRTest(hg19Ref, HiSeqBam_chr17, dbSNPb37_chr2021, "", localResources + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recal.txt");
         IntegrationTestSpec spec = new IntegrationTestSpec(
                 params.getCommandLine(),

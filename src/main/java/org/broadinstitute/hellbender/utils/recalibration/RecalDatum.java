@@ -36,7 +36,10 @@ public final class RecalDatum implements Serializable {
      * number of bases seen that didn't match the reference
      * (actually sum of the error weights - so not necessarily a whole number)
      * Stored with an internal multiplier to keep it closer to the floating-point sweet spot and avoid numerical error
-     * (see https://github.com/broadinstitute/hellbender/wiki/Numerical-errors ).
+     * (see https://github.com/broadinstitute/gatk/wiki/Numerical-errors ).
+     * However, the value of the multiplier influences the results.
+     * For example, you get different results for 1000.0 and 10000.0
+     * See MathUtilsUnitTest.testAddDoubles for a demonstration
      */
     private double numMismatches;
 

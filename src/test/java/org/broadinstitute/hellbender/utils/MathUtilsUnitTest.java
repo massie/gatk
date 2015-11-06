@@ -345,4 +345,39 @@ public final class MathUtilsUnitTest extends BaseTest {
     public void testRoundingError() {
         roundToNDecimalPlaces(1.1234, -1);
     }
+
+    @Test
+    public void testAddDoubles() throws Exception {
+        final double[] ds =
+                {0.125,
+                 0.125,
+                 0.125, 0.125, 0.125, 0.125,
+                        0.125, 0.14285714285714285, 0.14285714285714285, 0.14285714285714285,
+                        0.14285714285714285, 0.14285714285714285, 0.14285714285714285, 0.14285714285714285,
+                        0.125, 0.125, 0.125, 0.125,
+                        0.125, 0.125, 0.125, 0.125};
+
+        //Use different multipliers, see that the results are all different
+        double sumNoMult = 0.0;
+        for (int i = 0; i < ds.length; i++) {
+            sumNoMult += ds[i];
+        }
+        double sumMult1000 = 0.0;
+        for (int i = 0; i < ds.length; i++) {
+            sumMult1000 += ds[i] * 1000.0;
+        }
+        sumMult1000 /= 1000.0;
+
+        double sumMult10000 = 0.0;
+        for (int i = 0; i < ds.length; i++) {
+            sumMult10000 += ds[i] * 10000.0;
+        }
+        sumMult10000 /= 10000.0;
+
+        //They are all different
+        Assert.assertNotEquals(sumNoMult, sumMult1000);
+        Assert.assertNotEquals(sumNoMult, sumMult10000);
+        Assert.assertNotEquals(sumMult1000, sumMult10000);
+    }
+
 }
