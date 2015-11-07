@@ -29,7 +29,7 @@ public class BQSRPipelineSparkIntegrationTest extends CommandLineProgramTest {
             return  " -R " + referenceURL +
                     " -I " + bam +
                     " " + args +
-                    (knownSites.isEmpty() ? "": " --baseRecalibrationKnownVariants " + knownSites) +
+                    (knownSites.isEmpty() ? "": " --knownSites " + knownSites) +
                     " -O %s";
         }
 
@@ -53,12 +53,12 @@ public class BQSRPipelineSparkIntegrationTest extends CommandLineProgramTest {
         final String GRCh37Ref_2021 = b37_reference_20_21;
         final String GRCh37Ref2bit_chr2021 = b37_2bit_reference_20_21;
         final String hiSeqBam_chr20 = getResourceDir() + "CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.bam";
-        final String dbSNPb37_2021 = getResourceDir() + "dbsnp_138.b37.excluding_sites_after_129.ch20.1m-1m1k.vcf";
+        final String dbSNPb37_20 = getResourceDir() + "dbsnp_138.b37.excluding_sites_after_129.ch20.1m-1m1k.vcf";
 
         return new Object[][]{
                 // input local, computation local.
-                {new BQSRTest(GRCh37Ref2bit_chr2021, hiSeqBam_chr20, dbSNPb37_2021, "--joinStrategy BROADCAST", getResourceDir() + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recalibrated.bam")},
-                {new BQSRTest(GRCh37Ref_2021, hiSeqBam_chr20, dbSNPb37_2021, "--joinStrategy SHUFFLE", getResourceDir() + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recalibrated.bam")},
+                {new BQSRTest(GRCh37Ref2bit_chr2021, hiSeqBam_chr20, dbSNPb37_20, "--joinStrategy BROADCAST", getResourceDir() + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recalibrated.bam")},
+                {new BQSRTest(GRCh37Ref_2021, hiSeqBam_chr20, dbSNPb37_20, "--joinStrategy SHUFFLE", getResourceDir() + "expected.CEUTrio.HiSeq.WGS.b37.ch20.1m-1m1k.NA12878.recalibrated.bam")},
         };
     }
 

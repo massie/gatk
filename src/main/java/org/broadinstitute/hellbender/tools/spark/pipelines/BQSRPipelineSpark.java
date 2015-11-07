@@ -18,7 +18,7 @@ import org.broadinstitute.hellbender.engine.spark.datasources.ReadsSparkSink;
 import org.broadinstitute.hellbender.engine.spark.datasources.VariantsSparkSource;
 import org.broadinstitute.hellbender.exceptions.GATKException;
 import org.broadinstitute.hellbender.exceptions.UserException;
-import org.broadinstitute.hellbender.tools.ApplyBQSRArgumentCollection;
+import org.broadinstitute.hellbender.tools.ApplyBQSRUniqueArgumentCollection;
 import org.broadinstitute.hellbender.tools.spark.transforms.ApplyBQSRSparkFn;
 import org.broadinstitute.hellbender.tools.spark.transforms.BaseRecalibratorSparkFn;
 import org.broadinstitute.hellbender.tools.walkers.bqsr.BaseRecalibrator;
@@ -73,7 +73,7 @@ public final class BQSRPipelineSpark extends GATKSparkTool {
      * command-line arguments to fine tune the apply BQSR step.
      */
     @ArgumentCollection
-    public ApplyBQSRArgumentCollection applyBqsrArgs = new ApplyBQSRArgumentCollection();
+    public ApplyBQSRUniqueArgumentCollection applyBqsrArgs = new ApplyBQSRUniqueArgumentCollection();
 
     @Override
     public SerializableFunction<GATKRead, SimpleInterval> getReferenceWindowFunction() {
@@ -101,7 +101,7 @@ public final class BQSRPipelineSpark extends GATKSparkTool {
         //note: we use the reference dictionary from the reads themselves.
         final RecalibrationReport bqsrReport = BaseRecalibratorSparkFn.apply(rddReadContext, getHeaderForReads(), getHeaderForReads().getSequenceDictionary(), bqsrArgs);
         final Broadcast<RecalibrationReport> reportBroadcast = ctx.broadcast(bqsrReport);
-        final JavaRDD<GATKRead> finalReads = ApplyBQSRSparkFn.apply(initialReads, reportBroadcast, getHeaderForReads(), applyBqsrArgs);
+        final JavaRDD<GATKRead> finalReads = ApplyBQSRSparkFn.apply(initialReads, reportBroadcast, getHeaderForReads(), applyBqsrArgs.toApplyBQSRArgumentCollection(bqsrArgs.PRESERVE_QSCORES_LESS_THAN));
 
         try {
             ReadsSparkSink.writeReads(ctx, output, finalReads, getHeaderForReads(), shardedOutput ? ReadsWriteFormat.SHARDED : ReadsWriteFormat.SINGLE);

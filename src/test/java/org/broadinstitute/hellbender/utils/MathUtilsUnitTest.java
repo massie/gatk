@@ -357,11 +357,40 @@ public final class MathUtilsUnitTest extends BaseTest {
                         0.125, 0.125, 0.125, 0.125,
                         0.125, 0.125, 0.125, 0.125};
 
+        final double[] ds_reordered = {
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285};
+
         //Use different multipliers, see that the results are all different
         double sumNoMult = 0.0;
         for (int i = 0; i < ds.length; i++) {
             sumNoMult += ds[i];
         }
+        double sumNoMult_reordered = 0.0;
+        for (int i = 0; i < ds_reordered.length; i++) {
+            sumNoMult_reordered += ds[i];
+        }
+
         double sumMult1000 = 0.0;
         for (int i = 0; i < ds.length; i++) {
             sumMult1000 += ds[i] * 1000.0;
@@ -374,10 +403,35 @@ public final class MathUtilsUnitTest extends BaseTest {
         }
         sumMult10000 /= 10000.0;
 
+        double sumMult100000 = 0.0;
+        for (int i = 0; i < ds.length; i++) {
+            sumMult100000 += ds[i] * 100000.0;
+        }
+        sumMult100000 /= 100000.0;
+
+        double sumMult100000_reordered = 0.0;
+        for (int i = 0; i < ds_reordered.length; i++) {
+            sumMult100000_reordered += ds_reordered[i] * 100000.0;
+        }
+        sumMult100000_reordered /= 100000.0;
+
+        double sumMult1000_reordered = 0.0;
+        for (int i = 0; i < ds_reordered.length; i++) {
+            sumMult1000_reordered += ds_reordered[i] * 1000.0;
+        }
+        sumMult1000_reordered /= 1000.0;
+
         //They are all different
         Assert.assertNotEquals(sumNoMult, sumMult1000);
         Assert.assertNotEquals(sumNoMult, sumMult10000);
         Assert.assertNotEquals(sumMult1000, sumMult10000);
+
+        Assert.assertNotEquals(sumMult1000, sumMult1000_reordered); //not equal to itself when reordered
+
+        //But these ones is the same ordered or not (though not equal to each other)
+        Assert.assertEquals(sumNoMult, sumNoMult_reordered, sumNoMult + " vs " + sumNoMult_reordered);
+        Assert.assertEquals(sumMult100000_reordered, sumMult100000);
+        Assert.assertNotEquals(sumNoMult, sumMult100000);
     }
 
 }

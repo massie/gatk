@@ -3,15 +3,10 @@ package org.broadinstitute.hellbender.tools;
 import org.broadinstitute.hellbender.cmdline.Argument;
 import org.broadinstitute.hellbender.cmdline.ArgumentCollectionDefinition;
 
-import java.io.Serializable;
-
 /**
- * The reason for this class' existence is that ApplyWholeBQSRDataflow runs both phases of BQSR.
- * As such, it needs the options for phase 1 and the options for phase 2.
- * The command-line parser errors out if a single class contains two different AgumentCollection classes with the same member.
- * Thus I couldn't use the existing ApplyBQSRArgumentCollection and had to make a variant.
+ * The collection of those arguments for ApplyBQSR that are not already defined in RecalibrationArgumentCollection.
  */
-public class ApplyBQSRWithoutMinQScoreArgumentCollection implements ArgumentCollectionDefinition {
+public class ApplyBQSRUniqueArgumentCollection implements ArgumentCollectionDefinition {
     private static final long serialVersionUID = 1L;
 
     /**
