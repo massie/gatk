@@ -43,7 +43,7 @@ public class SAMRecordToGATKReadAdapterSerializer extends Serializer<SAMRecordTo
         record.setReferenceIndex(referenceIndex);
         record.setMateReferenceIndex(mateReferenceIndex);
 
-        return new SAMRecordToGATKReadAdapter(record);
+        return SAMRecordToGATKReadAdapter.headerlessReadAdapter(record);
     }
 
 

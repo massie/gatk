@@ -27,6 +27,20 @@ public class SAMRecordToGATKReadAdapter implements GATKRead, Serializable {
         this.samRecord = samRecord;
     }
 
+    /**
+     * Produces a SAMRecordToGATKReadAdapter wrapping the provided SAMRecord,
+     * and nulls out the header in the encapsulated read. This is useful for
+     * Spark tools, in order to avoid serializing the SAMFileHeader for each
+     * record.
+     *
+     * @param samRecord read to adapt (header will be stripped)
+     * @return SAMRecordToGATKReadAdapter wrapping the headerless samRecord
+     */
+    public static SAMRecordToGATKReadAdapter headerlessReadAdapter( final SAMRecord samRecord ) {
+        samRecord.setHeader(null);
+        return new SAMRecordToGATKReadAdapter(samRecord);
+    }
+
     @Override
     public String getName() {
         return samRecord.getReadName();
